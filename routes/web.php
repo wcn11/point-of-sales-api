@@ -14,7 +14,7 @@
 */
 
 $router->get('/', function () use ($router) {
-    return $router->app->version();
+    return "Halo Hackers... :)";
 });
 
 //$router->group(['middleware' => 'cors'], function () use ($router){
