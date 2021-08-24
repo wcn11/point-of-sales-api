@@ -60,6 +60,10 @@ $app->singleton(
 */
 
 $app->configure('app');
+$app->configure('dompdf');
+//$app->configure('cors');
+$app->configure('database');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -77,11 +81,13 @@ $app->configure('app');
 // ]);
 
 $app->middleware([
+//    Fruitcake\Cors\HandleCors::class,
     App\Http\Middleware\CorsMiddleware::class
 ]);
 
 $app->routeMiddleware([
      'auth' => App\Http\Middleware\Authenticate::class,
+
  ]);
 /*
 |--------------------------------------------------------------------------
@@ -94,10 +100,16 @@ $app->routeMiddleware([
 |
 */
 
+//$app->register(Fruitcake\Cors\CorsServiceProvider::class);
  $app->register(App\Providers\AppServiceProvider::class);
  $app->register(App\Providers\AuthServiceProvider::class);
  $app->register(App\Providers\EventServiceProvider::class);// Add this line
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+$app->register(\Barryvdh\DomPDF\ServiceProvider::class);
+
+//if (!class_exists('Redis')) {
+//    class_alias('Illuminate\Support\Facades\Redis', 'Redis');
+//}
 
 /*
 |--------------------------------------------------------------------------

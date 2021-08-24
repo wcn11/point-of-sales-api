@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Sales;
+use App\Models\SalesItem;
 use App\Traits\AccurateService;
+use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class PayController extends Controller
 {
-    use AccurateService;
+    use AccurateService, ApiResponser;
     /**
      * @var Request
      */
@@ -21,7 +23,7 @@ class PayController extends Controller
      */
     public function __construct(Request $request)
     {
-        $this->middleware('auth:api');
+        $this->middleware('auth:api',  ['except' => ['downloadReceipt']]);
         $this->request = $request;
     }
 
@@ -48,22 +50,60 @@ class PayController extends Controller
 
         $sales_invoice = $this->sendPost(env("ACCURATE_PREFIX_HOST") . "/accurate/api/sales-invoice/save.do", $item);
 
-        $data = [
-            "bankNo" => auth()->user()['glaccount_no'],
-            "chequeAmount" => $this->request['paymentAmount'],
-            "customerNo" => auth()->user()['customer_no_default'],
-            "detailInvoice[0].invoiceNo" => $sales_invoice['r']['number'],
-            "detailInvoice[0].paymentAmount" => $this->request['paymentAmount'],
-            "branchName" => auth()->user()['branch_name']
-        ];
-
-        $sales_receipt = $this->sendPost(env("ACCURATE_PREFIX_HOST") . "/accurate/api/sales-receipt/save.do", $data, "json");
-
-        if ($sales_receipt->failed()){
+        if ($sales_invoice->failed()){
             return response()->json($sales_invoice->failed());
         }
 
-        return response()->json($sales_receipt->json());
+        $salesItem = [];
 
+        $totalQuantity = 0;
+        $totalDebt = 0;
+        $totalCommission = 0;
+
+        $sales = Sales::create([
+            "id" => $sales_invoice->json()['r']['id'],
+            "user_id" => auth()->user()['id'],
+            "customers_id" => $this->request['customer'],
+            "total" => $this->request['paymentAmount'],
+            "total_quantity" => 0,
+        ]);
+
+        foreach ($this->request['carts'] as $cart) {
+
+            $salesItem[] = SalesItem::create([
+                "sales_id" => $sales->id,
+                "product_accurate_no" => $cart['product']['no'],
+                "product_name" => $cart['product']['name'],
+                "price" => $cart['product']['price'],
+                "quantity" => $cart['product']['quantity'],
+                "total_price" => $cart['product']['quantity'] * $cart['product']['price'],
+            ]);
+
+            $totalQuantity += $cart['product']['quantity'];
+            $totalCommission += auth()->user()['commission'] * $cart['product']['quantity'];
+            $totalDebt += ($cart['product']['price'] * $cart['product']['quantity']) - $totalCommission;
+
+        }
+
+        Sales::find($sales['id'])->update([
+            "total_quantity" => $totalQuantity,
+            "total_debt" => $totalDebt,
+            "total_commission" => $totalCommission
+        ]);
+
+
+        return response()->json($sales_invoice->json());
+
+    }
+
+    public function getInvoice($id){
+
+        $sales_invoice = $this->sendGet(env("ACCURATE_PREFIX_HOST") . "/accurate/api/sales-invoice/detail.do?id={$id}");
+
+        if ($sales_invoice->failed()){
+            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
+        }
+
+        return $this->successResponse($sales_invoice->json());
     }
 }
