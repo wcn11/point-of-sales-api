@@ -21,7 +21,8 @@ return [
         "get",
         "post",
         "put",
-        "delete"
+        "delete",
+        "patch"
     ],
 
     'allowed_origins' => [
