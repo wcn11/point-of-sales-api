@@ -17,9 +17,18 @@ return [
 
     'paths' => ['*'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => [
+        "get",
+        "post",
+        "put",
+        "delete"
+    ],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        "http://localhost:8080", //localhost,
+        "http://pos.beliayam.com", // non SSL production
+        "https://pos.beliayam.com" // SSL Production
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +38,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
