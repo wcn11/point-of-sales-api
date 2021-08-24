@@ -18,11 +18,7 @@ return [
     'paths' => ['*'],
 
     'allowed_methods' => [
-        "get",
-        "post",
-        "put",
-        "delete",
-        "patch"
+        'GET,HEAD,PUT,POST,DELETE,PATCH,OPTIONS',
     ],
 
     'allowed_origins' => [
