@@ -23,6 +23,8 @@ return [
 
     'allowed_origins' => [
         "http://localhost:8080", //localhost,
+        "http://pos-live.beliayam.test", //localhost,
+        "http://pos.beliayam.test", // non SSL production
         "http://pos.beliayam.com", // non SSL production
         "https://pos.beliayam.com" // SSL Production
     ],
@@ -31,7 +33,7 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['*'],
 
     'max_age' => 0,
 
