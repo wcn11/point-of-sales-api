@@ -23,6 +23,7 @@ return [
 
     'allowed_origins' => [
         "http://localhost:8080", //localhost,
+        "http://192.168.1.24:8080", //localhost
         "http://pos-live.beliayam.test", //localhost,
         "http://pos.beliayam.test", // non SSL production
         "http://pos.beliayam.com", // non SSL production
