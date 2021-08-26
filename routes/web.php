@@ -16,11 +16,6 @@
 $router->get('/', function () use ($router) {
     return "Halo Hackers... :)";
 });
-
-//$router->group(['middleware' => 'cors'], function () use ($router){
-//
-//    $router->post('login', 'AuthController@login');
-//});
 $router->group(['middleware' => ['auth:api']], function () use ($router){
     $router->get('me', 'AuthController@me');
 
