@@ -62,7 +62,7 @@ $app->singleton(
 
 $app->configure('app');
 $app->configure('dompdf');
-$app->configure('cors');
+//$app->configure('cors');
 $app->configure('database');
 
 
@@ -82,7 +82,7 @@ $app->configure('database');
 // ]);
 
 $app->middleware([
-    Fruitcake\Cors\HandleCors::class,
+//    Fruitcake\Cors\HandleCors::class,
 //    App\Http\Middleware\CorsMiddleware::class
 ]);
 
@@ -106,7 +106,6 @@ $app->routeMiddleware([
  $app->register(App\Providers\AuthServiceProvider::class);
  $app->register(App\Providers\EventServiceProvider::class);// Add this line
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
-$app->register(Fruitcake\Cors\CorsServiceProvider::class);
 //if (!class_exists('Redis')) {
 //    class_alias('Illuminate\Support\Facades\Redis', 'Redis');
 //}
