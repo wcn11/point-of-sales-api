@@ -40,5 +40,6 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
 });
 
 $router->post('login', 'AuthController@login');
+$router->post('login', 'AuthController@login');
 $router->post('logout', 'AuthController@logout');
 $router->get('stock/{key}/download', 'StockController@download');
