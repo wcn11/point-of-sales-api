@@ -27,8 +27,8 @@ return [
         "http://pos-live.beliayam.test", //localhost,
         "http://pos.beliayam.test", // non SSL production
         "http://pos.beliayam.com", // non SSL production
-        "https://pos.beliayam.com/", // SSL Production
-        "https://pos-admin.beliayam.com/" // SSL Production
+        "https://pos.beliayam.com", // SSL Production
+        "https://pos-admin.beliayam.com" // SSL Production
     ],
 
     'allowed_origins_patterns' => [],

@@ -68,10 +68,11 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
         $router->put('users/active', "UserController@updateActive");
         $router->put('users/admin', "UserController@updateAdmin");
+
+        $router->post('logout', 'AuthController@logout');
     });
 
     $router->post('login', 'AuthController@login');
-    $router->post('logout', 'AuthController@logout');
 });
 
 $router->post('login', 'AuthController@login');

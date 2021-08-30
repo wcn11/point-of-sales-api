@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\ApiController;
+use App\Traits\ApiResponser;
 use Tymon\JWTAuth\JWT;
 
 class AuthController extends ApiController
 {
+    use ApiResponser;
     /**
      * Create a new AuthController instance.
      *
@@ -54,7 +56,7 @@ class AuthController extends ApiController
     {
         auth('api-admin')->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return $this->successResponse(true, 'Successfully logged out');
     }
 
     public function refresh()
