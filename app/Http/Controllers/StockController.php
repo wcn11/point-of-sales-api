@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\AccurateService;
+use App\Traits\AccuratePosService;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class StockController extends ApiController
 {
-    use AccurateService;
+    use AccuratePosService;
 
     /**
      * @var PDF
@@ -28,7 +28,7 @@ class StockController extends ApiController
 
     public function index(){
 
-        $response = $this->sendGet(env('ACCURATE_PREFIX_HOST') ."/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000");
+        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000");
 
         if ($response->failed()){
             return $this->errorResponse($response->json()['d']);
@@ -40,33 +40,31 @@ class StockController extends ApiController
 
         }
 
-        $stocks = [];
+        return $this->successResponse($response->json());
 
-        foreach ($response->json()['d'] as $stock){
+    }
 
-            $responseStock = $this->sendGet(env('ACCURATE_PREFIX_HOST') ."/accurate/api/item/get-stock.do?no={$stock['no']}&warehouseName=" . auth()->user()['branch_name']);
+    public function getStockByNo($no){
 
-            if ($responseStock->failed()){
-                return $this->errorResponse($responseStock->json()['d']);
-            }
+        $response = $this->sendGet("/accurate/api/item/get-stock.do?no=${no}&warehouseName=" . auth()->user()['warehouse_name']);
 
-            $stock['stock'] = $responseStock->json()['d'];
+        if ($response->failed()){
+            return $this->errorResponse($response->json()['d']);
+        }
 
-            $stocks[] = $stock;
+        if (!$response->json()['s']){
+
+            return $this->errorResponse($response->json());
 
         }
 
-        $key = auth()->user()['id'] . "_". Str::random(10);
-
-        Cache::put($key, $stocks, 3600);
-
-        return $this->successResponse($key);
+        return $this->successResponse($response->json());
 
     }
 
     public function download($key){
 
-        $stocks = Cache::get($key);
+        $stocks = $this->index();
 
         return $this->successResponse($stocks);
     }

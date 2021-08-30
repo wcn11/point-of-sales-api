@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ use function PHPUnit\Framework\isEmpty;
 
 class CustomerController extends ApiController
 {
-    use AccurateService;
+    use AccuratePosService;
     /**
      * @var Request
      */
@@ -33,7 +34,7 @@ class CustomerController extends ApiController
 
         $branchID = auth()->user()['customer_category_id'];
 
-        $response = $this->sendGet(env('ACCURATE_PREFIX_HOST') ."/accurate/api/customer/list.do?fields=id,name,category&filter.customerCategoryId.op=EQUAL&filter.customerCategoryId.val=" . $branchID);
+        $response = $this->sendGet("/accurate/api/customer/list.do?fields=id,name,category&filter.customerCategoryId.op=EQUAL&filter.customerCategoryId.val=" . $branchID);
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
@@ -45,7 +46,7 @@ class CustomerController extends ApiController
 
     public function getCustomerById($id){
 
-        $response = $this->sendGet(env('ACCURATE_PREFIX_HOST') ."/accurate/api/customer/detail.do?id=" . $id);
+        $response = $this->sendGet("/accurate/api/customer/detail.do?id=" . $id);
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
@@ -74,10 +75,14 @@ class CustomerController extends ApiController
             "notes" => $this->request['customer']['notes'],
         ];
 
-        $response = $this->sendPost(env("ACCURATE_PREFIX_HOST") . "/accurate/api/customer/save.do", $data);
+        $response = $this->sendPost("/accurate/api/customer/save.do", $data);
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
+        }
+
+        if (!$response->json()['s']){
+            return $response->json();
         }
 
         $customer = [
@@ -121,7 +126,7 @@ class CustomerController extends ApiController
             "notes" => $this->request['customer']['notes']
         ];
 
-        $response = $this->sendPost(env("ACCURATE_PREFIX_HOST") .  "/accurate/api/customer/save.do", $data, "json");
+        $response = $this->sendPost("/accurate/api/customer/save.do", $data, "json");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");

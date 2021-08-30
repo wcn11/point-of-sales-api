@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
-use App\Traits\AccuratePosService;
-use Illuminate\Support\Str;
+use App\Http\Controllers\ApiController;
 use Tymon\JWTAuth\JWT;
 
 class AuthController extends ApiController
 {
-    use AccuratePosService;
     /**
      * Create a new AuthController instance.
      *
@@ -18,7 +16,7 @@ class AuthController extends ApiController
 
     public function __construct(JWT $jwt)
     {
-        $this->middleware('auth:api', ['except' => ['login']]);
+        $this->middleware('auth:api-admin', ['except' => ['login']]);
         $this->jwt = $jwt;
     }
 
@@ -26,17 +24,15 @@ class AuthController extends ApiController
     {
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->attempt($credentials)) {
+        if (! $token = auth('api-admin')->attempt($credentials)) {
 
             return $this->errorResponse('Email Atau Kata Sandi Salah', true);
 
         }
 
-        $this->getDatabaseById(env("ACCURATE_HOST_DASAR") . "/api/open-db.do?id=" . auth()->user()['database_accurate_id']);
+        auth('api-admin')->user()['token'] = $this->respondWithToken($token);
 
-        auth()->user()['token'] = $this->respondWithToken($token);
-
-        return response()->json(auth()->user());
+        return response()->json(auth('api-admin')->user());
 
     }
 
@@ -45,25 +41,25 @@ class AuthController extends ApiController
         return [
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth('api-admin')->factory()->getTTL() * 60
         ];
     }
 
     public function me()
     {
-        return response()->json(auth()->user());
+        return response()->json(auth('api-admin')->user());
     }
 
     public function logout()
     {
-        auth()->logout();
+        auth('api-admin')->logout();
 
         return response()->json(['message' => 'Successfully logged out']);
     }
 
     public function refresh()
     {
-        return $this->respondWithToken(auth()->refresh());
+        return $this->respondWithToken(auth('api-admin')->refresh());
     }
 
 }

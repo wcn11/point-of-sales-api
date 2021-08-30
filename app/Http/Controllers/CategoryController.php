@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use Illuminate\Support\Facades\Http;
 
 class CategoryController extends ApiController
 {
-    use AccurateService;
+    use AccuratePosService;
     /**
      * Create a new controller instance.
      *
@@ -20,7 +21,7 @@ class CategoryController extends ApiController
 
     public function all(){
 
-        $response = $this->sendGet(env('ACCURATE_PREFIX_HOST') ."/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000");
+        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");

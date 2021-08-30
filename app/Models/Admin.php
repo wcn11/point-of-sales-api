@@ -10,18 +10,21 @@ use Illuminate\Database\Eloquent\Model;
 use Laravel\Lumen\Auth\Authorizable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject
+class Admin extends Model implements AuthenticatableContract, AuthorizableContract, JWTSubject
 {
     use Authenticatable, Authorizable, HasFactory;
+
+    protected $table = "admin";
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = [
-        'name','session_key', 'database_accurate_id', 'session_database_host', 'session_database_key', 'email',"password", "branch_id", "branch_name", "warehouse_id", "warehouse_name", "customer_category_id", "customer_category_name", "customer_no_default", "customer_name_default", "glaccount_id", "glaccount_no", "glaccount_name", "commission", "is_active", "is_admin"
-    ];
+    protected $guarded = [];
+//    protected $fillable = [
+//        'name', 'email', "branch_id", "branch_name", "customer_category_id", "customer_category_name", "customer_no_default", "glaccount_no", "glaccount_name", "commission"
+//    ];
 
     /**
      * The attributes excluded from the model's JSON form.
