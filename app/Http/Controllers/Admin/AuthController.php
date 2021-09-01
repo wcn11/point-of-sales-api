@@ -34,7 +34,7 @@ class AuthController extends ApiController
 
         auth('api-admin')->user()['token'] = $this->respondWithToken($token);
 
-        return response()->json(auth('api-admin')->user());
+        return $this->successResponse(auth('api-admin')->user());
 
     }
 

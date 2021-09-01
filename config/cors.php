@@ -22,6 +22,7 @@ return [
     ],
 
     'allowed_origins' => [
+        "http://192.168.1.24", //localhost
         "http://localhost:8080", //localhost,
         "http://192.168.1.24:8080", //localhost
         "http://pos-live.beliayam.test", //localhost,

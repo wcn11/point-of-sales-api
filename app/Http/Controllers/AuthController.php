@@ -36,7 +36,7 @@ class AuthController extends ApiController
 
         auth()->user()['token'] = $this->respondWithToken($token);
 
-        return response()->json(auth()->user());
+        return $this->successResponse(auth()->user());
 
     }
 
@@ -51,14 +51,12 @@ class AuthController extends ApiController
 
     public function me()
     {
-        return response()->json(auth()->user());
+        return $this->successResponse(auth()->user());
     }
 
     public function logout()
     {
-        auth()->logout();
-
-        return response()->json(['message' => 'Successfully logged out']);
+        return $this->successResponse(true, "Berhasil Keluar");
     }
 
     public function refresh()
