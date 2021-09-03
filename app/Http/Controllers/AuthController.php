@@ -32,13 +32,13 @@ class AuthController extends ApiController
 
         }
 
-        $user = auth()->user();
-
-        if (!$user['id_active']){
-
-            return $this->errorResponse('Akun Anda Belum Aktif', true);
-
-        }
+//        $user = auth()->user();
+//
+//        if (!$user['id_active']){
+//
+//            return $this->errorResponse('Akun Anda Belum Aktif', true);
+//
+//        }
 
         $this->getDatabaseById(env("ACCURATE_HOST_DASAR") . "/api/open-db.do?id=" . auth()->user()['database_accurate_id']);
 
