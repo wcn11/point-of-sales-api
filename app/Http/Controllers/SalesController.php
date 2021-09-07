@@ -65,6 +65,8 @@ class SalesController extends ApiController
         $data['commission'] = $commission;
         $data['debt'] = $debt;
         $data['sales'] = $sales;
+        $data['centralCommission'] = auth()->user()['commission'];
+        $data['partnerCommission'] = auth()->user()['partnerCommission'];
 
         return $this->successResponse($data);
 

@@ -37,7 +37,7 @@ class PayController extends Controller
         foreach ($this->request['carts'] as $key => $cart) {
 
             $item["detailItem[{$key}].itemNo"] = $cart['no'];
-            $item["detailItem[{$key}].unitPrice"] = $cart['branchPrice'] - auth()->user()['commission'];
+            $item["detailItem[{$key}].unitPrice"] = $cart['basic_price'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
         }
@@ -72,14 +72,16 @@ class PayController extends Controller
                 "sales_id" => $sales->id,
                 "product_accurate_no" => $cart['no'],
                 "product_name" => $cart['name'],
-                "price" => $cart['price'],
                 "quantity" => $cart['quantity'],
-                "total_price" => $cart['quantity'] * $cart['price'],
+                "basic_price" => $cart['basic_price'],
+                "centralCommission" => $cart['centralCommission'],
+                "partnerCommission" => $cart['partnerCommission'],
+                "grand_price" => $cart['grand_price'],
             ]);
 
             $totalQuantity += $cart['quantity'];
-            $totalCommission += auth()->user()['commission'] * $cart['quantity'];
-            $totalDebt += ($cart['price'] * $cart['quantity']) - $totalCommission;
+            $totalCommission += $cart['partnerCommission'];
+            $totalDebt += ($cart['basic_price'] * $cart['centralCommission']);
 
         }
 
@@ -89,28 +91,28 @@ class PayController extends Controller
             "total_commission" => $totalCommission,
         ]);
 
-        return response()->json($sales_invoice->json());
+        return $this->successResponse($sales_invoice->json());
 
     }
 
     public function getInvoice($id){
 
-        $sales_invoice = $this->sendGet("/accurate/api/sales-invoice/detail.do?id={$id}");
+//        $sales_invoice = $this->sendGet("/accurate/api/sales-invoice/detail.do?id={$id}", auth()->user()['session_database_key']);
+//
+//        if ($sales_invoice->failed()){
+//            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
+//        }
+//
+//        if (!$sales_invoice->json()['s']){
+//            return $this->errorResponse($sales_invoice->json()['d']);
+//        }
 
-        if ($sales_invoice->failed()){
-            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
-        }
-
-        if (!$sales_invoice->json()['s']){
-            return $this->errorResponse($sales_invoice->json()['d']);
-        }
-
-        $sales = Sales::where("accurate_invoice_id", "=", $sales_invoice->json()['d']['id'])->first();
+        $sales = Sales::with("sales_item")->find($id);
 
         $data = [
-            "invoices" => $sales_invoice->json(),
+            "invoices" =>$sales,
             "grand_total" => $sales['total'],
-            "total_additional" => $sales['total_additional']
+            "total_additional" => $sales['total_additional'],
         ];
 
         return $this->successResponse($data);

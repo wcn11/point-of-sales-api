@@ -11,11 +11,13 @@
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.3",
         "illuminate/redis": "^8.55",
+        "intervention/image": "^2.5",
         "laravel/lumen-framework": "^8.0",
         "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
+        "league/flysystem": "^1.1",
         "mockery/mockery": "^1.3.1",
         "phpunit/phpunit": "^9.3"
     },
@@ -24,7 +26,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers.php"
+        ]
     },
     "autoload-dev": {
         "classmap": [

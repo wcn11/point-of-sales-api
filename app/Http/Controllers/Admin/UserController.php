@@ -60,6 +60,7 @@ class UserController extends ApiController
             "glaccount_no" => $request['selectedGlAccount']['no'],
             "glaccount_name" => $request['selectedGlAccount']['name'],
             "commission" => $request['commission'],
+            "partnerCommission" => $request['partnerCommission'],
             "is_active" => $request['is_active'],
             "is_admin" => $request['is_admin'],
         ]);
@@ -88,6 +89,7 @@ class UserController extends ApiController
             "glaccount_no" => $request['selectedGlAccount']['no'],
             "glaccount_name" => $request['selectedGlAccount']['name'],
             "commission" => $request['commission'],
+            "partnerCommission" => $request['partnerCommission'],
             "is_active" => $request['is_active'],
             "is_admin" => $request['is_admin'],
         ]);

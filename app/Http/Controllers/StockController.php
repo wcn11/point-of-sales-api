@@ -28,7 +28,7 @@ class StockController extends ApiController
 
     public function index(){
 
-        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000");
+        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000", auth()->user()['session_database_key']);
 
         if ($response->failed()){
             return $this->errorResponse($response->json()['d']);
@@ -46,7 +46,7 @@ class StockController extends ApiController
 
     public function getStockByNo($no){
 
-        $response = $this->sendGet("/accurate/api/item/get-stock.do?no=${no}&warehouseName=" . auth()->user()['warehouse_name']);
+        $response = $this->sendGet("/accurate/api/item/get-stock.do?no=${no}&warehouseName=" . auth()->user()['warehouse_name'], auth()->user())['session_database_key'];
 
         if ($response->failed()){
             return $this->errorResponse($response->json()['d']);

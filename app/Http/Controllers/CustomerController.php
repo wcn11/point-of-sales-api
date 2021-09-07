@@ -34,7 +34,7 @@ class CustomerController extends ApiController
 
         $branchID = auth()->user()['customer_category_id'];
 
-        $response = $this->sendGet("/accurate/api/customer/list.do?fields=id,name,category&filter.customerCategoryId.op=EQUAL&filter.customerCategoryId.val=" . $branchID);
+        $response = $this->sendGet("/accurate/api/customer/list.do?fields=id,name,category&filter.customerCategoryId.op=EQUAL&filter.customerCategoryId.val=" . $branchID, auth()->user()['session_database_key']);
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");

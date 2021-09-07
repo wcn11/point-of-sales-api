@@ -13,10 +13,10 @@ trait AccuratePosService{
 
     }
 
-    public function sendGet($url = "", $authorizationType = "Bearer "){
+    public function sendGet($url, $session = "", $authorizationType = "Bearer "){
         return Http::withHeaders([
             'Authorization' => $authorizationType . " " . env("ACCURATE_ACCESS_TOKEN"),
-            'X-Session-ID' => auth()->user()['session_database_key'],
+            'X-Session-ID' => $session,
         ])->get( auth()->user()['session_database_host'] . $url);
     }
 

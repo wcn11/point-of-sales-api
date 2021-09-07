@@ -106,6 +106,7 @@ $app->register(\Fruitcake\Cors\CorsServiceProvider::class);
  $app->register(App\Providers\AuthServiceProvider::class);
  $app->register(App\Providers\EventServiceProvider::class);// Add this line
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+$app->register(Intervention\Image\ImageServiceProvider::class);
 //if (!class_exists('Redis')) {
 //    class_alias('Illuminate\Support\Facades\Redis', 'Redis');
 //}

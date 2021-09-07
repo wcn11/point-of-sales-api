@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use Illuminate\Support\Facades\Http;
@@ -21,35 +22,37 @@ class ProductController extends ApiController
 
     public function getProductsByCategoryId($id){
 
-        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000");
+//        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000", auth()->user()['session_database_key']);
+//
+//        if ($response->failed()){
+//            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
+//        }
+//
+//        $products = [];
+//
+//        foreach ($response->json()['d'] as $product){
+//
+//            if ($product['itemCategory']['id'] === (int)$id){
+//
+//                $products[] = $product;
+//
+//            }
+//
+//        }
+//
+//        if (count($products) <= 0){
+//            return $this->errorResponse("Data Tidak Ditemukan!", true);
+//        }
 
-        if ($response->failed()){
-            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
-        }
+        $products = Product::all()->where("accurate_database_id", auth()->user()['database_accurate_id']);
 
-        $products = [];
-
-        foreach ($response->json()['d'] as $product){
-
-            if ($product['itemCategory']['id'] === (int)$id){
-
-                $products[] = $product;
-
-            }
-
-        }
-
-        if (count($products) <= 0){
-            return $this->errorResponse("Data Tidak Ditemukan!", true);
-        }
-
-        return response()->json($products);
+        return $this->successResponse($products);
 
     }
 
     public function addProduct($id){
 
-        $response = $this->sendGet("/accurate/api/item/get-stock.do?no={$id}&warehouseName=" . auth()->user()['warehouse_name']);
+        $response = $this->sendGet("/accurate/api/item/get-stock.do?no={$id}&warehouseName=" . auth()->user()['warehouse_name'], auth()->user()['session_database_key']);
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");

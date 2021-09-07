@@ -46,6 +46,23 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
     $router->group(['middleware' => "auth:api-admin"], function () use ($router){
 
         $router->get('db-lists', "AccurateController@db_lists");
+
+        $router->get('items', "ProductController@index");
+
+        $router->post('items/{id}', "ProductController@updateProduct");
+
+        $router->post('items', "ProductController@add");
+
+        $router->get('items/check/{no}', "ProductController@check");
+
+        $router->get('items/list-unit', "ProductController@listUnit");
+
+        $router->get('items/categories', "ProductController@listCategory");
+
+        $router->get('sync', "ProductController@sync");
+
+
+
         $router->post('set-database-session/{id}', "AccurateController@getSessionId");
 
         //user add
