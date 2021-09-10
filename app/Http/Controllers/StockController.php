@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Traits\AccuratePosService;
 use Barryvdh\DomPDF\PDF;
 use Illuminate\Support\Facades\Cache;
@@ -28,19 +29,24 @@ class StockController extends ApiController
 
     public function index(){
 
-        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000", auth()->user()['session_database_key']);
+        $products = Product::with(["product_partner" => function($query) {
+            $query->where("user_id", "=", auth()->user()['id']);
+//            $query->where("product_id", auth()->user()['id']);
+        }])
+            ->where("accurate_database_id", "=", auth()->user()['database_accurate_id'])->get();
+//        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000", auth()->user()['session_database_key']);
+//
+//        if ($response->failed()){
+//            return $this->errorResponse($response->json()['d']);
+//        }
+//
+//        if (!$response->json()['s']){
+//
+//            return response()->json($response->json());
+//
+//        }
 
-        if ($response->failed()){
-            return $this->errorResponse($response->json()['d']);
-        }
-
-        if (!$response->json()['s']){
-
-            return response()->json($response->json());
-
-        }
-
-        return $this->successResponse($response->json());
+        return $this->successResponse($products);
 
     }
 

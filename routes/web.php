@@ -51,6 +51,8 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
         $router->post('items/{id}', "ProductController@updateProduct");
 
+        $router->get('items/stock/{id}/product', "ProductController@getUserStockByProductId");
+
         $router->post('items', "ProductController@add");
 
         $router->get('items/check/{no}', "ProductController@check");
@@ -59,7 +61,13 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
         $router->get('items/categories', "ProductController@listCategory");
 
+        $router->post('items/stock/update', "ProductController@updateStock");
+
         $router->get('sync', "ProductController@sync");
+
+        $router->get('/sync/stock/{no}/branch/{branch_name}', "ProductController@syncStockByProductId");
+
+        $router->get('/sync/{id}/price', "ProductController@syncPriceByProductId");
 
 
 

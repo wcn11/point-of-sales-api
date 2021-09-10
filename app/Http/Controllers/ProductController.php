@@ -44,7 +44,9 @@ class ProductController extends ApiController
 //            return $this->errorResponse("Data Tidak Ditemukan!", true);
 //        }
 
-        $products = Product::all()->where("accurate_database_id", auth()->user()['database_accurate_id']);
+        $products = Product::with(['product_partner' => function($product_partner) {
+            $product_partner->where("user_id", "=", auth()->user()['id']);
+        }])->where("accurate_database_id", auth()->user()['database_accurate_id'])->where("category_id", $id)->get();
 
         return $this->successResponse($products);
 

@@ -33,7 +33,7 @@ class UserController extends ApiController
 
     public function all(){
 
-        $users = User::where(["database_accurate_id" => auth('api-admin')->user()['session_database_id']])->get();
+        $users = User::with("product_partner")->where(["database_accurate_id" => auth('api-admin')->user()['session_database_id']])->get();
 
         return $this->successResponse($users);
 

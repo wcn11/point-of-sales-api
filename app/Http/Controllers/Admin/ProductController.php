@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\ApiController;
 use App\Models\Product;
+use App\Models\ProductPartner;
+use App\Models\User;
 use App\Traits\AccuratePosService;
 use Illuminate\Http\Request;
 use App\Services\ImageInterventionService as ImageService;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends ApiController
 {
@@ -43,8 +46,13 @@ class ProductController extends ApiController
 //        if (!$product->json()['s']){
 //            return $this->errorResponse($product->json()['d'], false, 404);
 //        }
+//        $products = DB::table('product')
+//            ->join('product_partner', function ($join) {
+//                $join->on('product_partner.product_id', '=', 'product.id');
+//            })
+//            ->get();
 
-        $products = Product::all()->where("accurate_database_id", "=", auth('api-admin')->user()['session_database_id']);
+        $products = Product::with("product_partner.users")->where("accurate_database_id", "=", auth('api-admin')->user()['session_database_id'])->get();
 
         return $this->successResponse($products);
 
@@ -58,17 +66,29 @@ class ProductController extends ApiController
 
     public function add(){
 
+        $id = $this->sendGet(auth('api-admin')->user()['session_host'] ."/accurate/api/item/search-by-item-or-sn.do?keywords={$this->request['code']}", auth('api-admin')->user()['session_database_key']);
+
+
+        if ($id->failed()){
+            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false, 500);
+        }
+
+        if (count($id['d']) <= 0){
+            return $this->errorResponse("Produk Tidak Terdaftar Pada Accurate", false, 500);
+        }
+
         $data = [
             "accurate_database_id" => auth('api-admin')->user()['session_database_id'],
+            "accurate_product_id" => $id['d'][0]['id'],
             "no" => $this->request['code'],
             "name" => $this->request['name'],
             "category_id" => $this->request['category'],
             "type" => $this->request['type'],
             "unit_id" => $this->request['unit'],
-            "basic_price" => $this->request['price'],
-            "centralCommission" => $this->request['centralCommission'],
-            "partnerCommission" => $this->request['partnerCommission'],
-            "grand_price" => $this->request['grand_price'],
+//            "basic_price" => $this->request['price'],
+//            "centralCommission" => $this->request['centralCommission'],
+//            "partnerCommission" => $this->request['partnerCommission'],
+//            "grand_price" => $this->request['grand_price'],
         ];
 
         if($this->request->hasFile('image')){
@@ -80,6 +100,20 @@ class ProductController extends ApiController
         }
 
         $product = $this->product->create($data);
+
+        $users = User::where(["database_accurate_id" => auth('api-admin')->user()['session_database_id']])->get();
+
+        foreach ($users as $user){
+
+            ProductPartner::create([
+                "user_id" => $user['id'],
+                "product_id" => $product['id'],
+                "branch_name" => $user['warehouse_name'],
+                "stock" => 0,
+                "price" => 0
+            ]);
+
+        }
 
         return $this->successResponse($product, "Produk Baru Ditambahkan");
 
@@ -113,6 +147,17 @@ class ProductController extends ApiController
         $product->update($data);
 
         return $this->successResponse($product, "Produk Diubah");
+
+    }
+
+    public function getUserStockByProductId($id){
+
+        $user = User::with(["product_partner" => function($query) use($id){
+            $query->where("product_id", $id);
+        }])
+            ->where("database_accurate_id", auth('api-admin')->user()['session_database_id'])->get();
+
+        return $this->successResponse($user);
 
     }
 
@@ -198,6 +243,56 @@ class ProductController extends ApiController
         }
 
         return $this->successResponse(false);
+
+    }
+
+    public function syncStockByProductId($no, $branch_name){
+
+        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/item/get-stock.do?warehouseName={$branch_name}&no={$no}", auth('api-admin')->user()['session_database_key']);
+
+        if ($response->failed()){
+            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
+        }
+
+        return $this->successResponse($response->json());
+
+    }
+
+    public function syncPriceByProductId($id){
+
+        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/item/detail.do?id=${id}", auth('api-admin')->user()['session_database_key']);
+
+        if ($response->failed()){
+            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
+        }
+
+        return $this->successResponse($response->json());
+
+    }
+
+    public function updateStock(){
+
+        $stocks = $this->request['product'];
+
+        try {
+
+            foreach ($stocks['product_partner'] as $stock){
+
+                $product = ProductPartner::where("product_id", "=", $stock['product_id'])->where("user_id", "=", $stock['user_id'])->first();
+
+                $product->update([
+                    "stock" => $stock['stock']
+                ]);
+
+            }
+
+        }catch (\Exception $e){
+
+            return $this->errorResponse("Kesalahan saat mengupdate persediaan");
+
+        }
+
+        return $this->successResponse("","Persediaan telah diubah");
 
     }
 }

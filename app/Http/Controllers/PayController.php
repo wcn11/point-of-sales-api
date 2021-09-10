@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductPartner;
 use App\Models\Sales;
 use App\Models\SalesItem;
 use App\Traits\AccuratePosService;
@@ -37,7 +38,7 @@ class PayController extends Controller
         foreach ($this->request['carts'] as $key => $cart) {
 
             $item["detailItem[{$key}].itemNo"] = $cart['no'];
-            $item["detailItem[{$key}].unitPrice"] = $cart['basic_price'];
+            $item["detailItem[{$key}].unitPrice"] = $cart['basic_price'] + $cart['centralCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
         }
@@ -69,6 +70,7 @@ class PayController extends Controller
         foreach ($this->request['carts'] as $cart) {
 
             $salesItem[] = SalesItem::create([
+                "category_id" => $cart['category_id'],
                 "sales_id" => $sales->id,
                 "product_accurate_no" => $cart['no'],
                 "product_name" => $cart['name'],
@@ -76,12 +78,16 @@ class PayController extends Controller
                 "basic_price" => $cart['basic_price'],
                 "centralCommission" => $cart['centralCommission'],
                 "partnerCommission" => $cart['partnerCommission'],
-                "grand_price" => $cart['grand_price'],
+                "grand_price" => ($cart['basic_price'] + $cart['centralCommission'] + $cart['partnerCommission']) * $cart['quantity'],
+            ]);
+
+            ProductPartner::find($cart['product_partner'][0]['id'])->update([
+                "stock" => $cart['stock']
             ]);
 
             $totalQuantity += $cart['quantity'];
-            $totalCommission += $cart['partnerCommission'];
-            $totalDebt += ($cart['basic_price'] * $cart['centralCommission']);
+            $totalCommission += $cart['partnerCommission'] * $cart['quantity'];
+            $totalDebt += ($cart['basic_price'] + $cart['centralCommission']) * $cart['quantity'];
 
         }
 

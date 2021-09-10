@@ -51,4 +51,11 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return [];
     }
+
+    public function product_partner(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+
+        return $this->hasMany(ProductPartner::class);
+
+    }
 }
