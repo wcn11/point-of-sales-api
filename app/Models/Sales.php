@@ -23,4 +23,9 @@ class Sales extends Model
         return $this->hasMany(SalesItem::class);
     }
 
+    public function customers(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
 }

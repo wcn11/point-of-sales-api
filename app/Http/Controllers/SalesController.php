@@ -46,7 +46,21 @@ class SalesController extends ApiController
 
         }else{
 
-            $sales = Sales::with("sales_item")->where("user_id", auth()->user()['id'])->whereBetween('updated_at',[Carbon::now()->startOfDay()->format("Y-m-d H:i:s"), Carbon::now()->format("Y-m-d H:i:s")])->get();
+//            $sales = Sales::with("sales_item")
+//                ->where('created_at','>=',Carbon::parse($this->request['from'])->startOfDay()->format("Y-m-d H:i:s"))
+//                ->where('created_at','<=',Carbon::parse($this->request['from'])->endOfDay()->format("Y-m-d H:i:s"))
+//                ->where("user_id", auth()->user()['id'])
+//                ->orderBy("created_at", "DESC")
+//                ->get();
+
+            $sales = Sales::with("sales_item")->with('customers')
+                ->where("user_id", auth()->user()['id'])
+                ->whereBetween('created_at',[
+                    Carbon::now()->startOfDay()->format("Y-m-d H:i:s"),
+                    Carbon::now()->endOfDay()->format("Y-m-d H:i:s")
+                ])
+                ->orderBy("created_at", "DESC")
+                ->get();
 
         }
 
@@ -56,9 +70,9 @@ class SalesController extends ApiController
         foreach ($sales as $sale){
 
             foreach ($sale['sales_item'] as $item){
-                $commission += ($item['quantity'] * auth()->user()['commission']);
-                $debt += ($item['price'] - auth()->user()['commission']) * $item['quantity'];
+                $commission += ($item['quantity'] * $item['partnerCommission']);
             }
+            $debt += $sale['total_debt'];
 
         }
 

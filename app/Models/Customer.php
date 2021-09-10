@@ -16,4 +16,11 @@ class Customer extends Model
 
     protected $table = "customers";
 
+    public function sales(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+
+        return $this->hasMany(Sales::class);
+
+    }
+
 }
