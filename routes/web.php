@@ -22,9 +22,14 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
 
     $router->get('categories', 'CategoryController@all');
 
+    $router->get('order-online', 'OrderOnlineController@all');
+
+    $router->get('order-online/{id}', 'OrderOnlineController@getOrderById');
+
+    $router->post('order-online/{id}', 'OrderOnlineController@updateOrderToSuccess');
+
     $router->get('products/{id}', 'ProductController@getProductsByCategoryId');
     $router->get('add-product/{id}', 'ProductController@addProduct');
-
 
     $router->get('stocks', 'StockController@index');
     $router->get('stock/{no}', 'StockController@getStockByNo');
@@ -99,6 +104,8 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
     $router->post('login', 'AuthController@login');
 });
+
+$router->post('online-order', 'OrderOnlineController@onlineOrder');
 
 $router->post('login', 'AuthController@login');
 $router->post('login', 'AuthController@login');

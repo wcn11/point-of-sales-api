@@ -8,6 +8,7 @@ use App\Models\SalesItem;
 use App\Traits\AccuratePosService;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PayController extends Controller
 {
@@ -24,7 +25,7 @@ class PayController extends Controller
      */
     public function __construct(Request $request)
     {
-        $this->middleware('auth:api',  ['except' => ['downloadReceipt']]);
+        $this->middleware('auth:api',  ['except' => ['downloadReceipt', 'onlineOrder']]);
         $this->request = $request;
     }
 
@@ -103,16 +104,6 @@ class PayController extends Controller
 
     public function getInvoice($id){
 
-//        $sales_invoice = $this->sendGet("/accurate/api/sales-invoice/detail.do?id={$id}", auth()->user()['session_database_key']);
-//
-//        if ($sales_invoice->failed()){
-//            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
-//        }
-//
-//        if (!$sales_invoice->json()['s']){
-//            return $this->errorResponse($sales_invoice->json()['d']);
-//        }
-
         $sales = Sales::with("sales_item")->find($id);
 
         $data = [
@@ -122,5 +113,13 @@ class PayController extends Controller
         ];
 
         return $this->successResponse($data);
+    }
+
+    public function onlineOrder(){
+
+        return DB::table("coba")->insert([
+            "name" => 123
+        ]);
+
     }
 }
