@@ -36,22 +36,6 @@ class ProductController extends ApiController
 
     public function index(){
 
-//        $product = $this->all();
-
-
-//        if ($product->failed()){
-//            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false, 500);
-//        }
-//
-//        if (!$product->json()['s']){
-//            return $this->errorResponse($product->json()['d'], false, 404);
-//        }
-//        $products = DB::table('product')
-//            ->join('product_partner', function ($join) {
-//                $join->on('product_partner.product_id', '=', 'product.id');
-//            })
-//            ->get();
-
         $products = Product::with("product_partner.users")->where("accurate_database_id", "=", auth('api-admin')->user()['session_database_id'])->get();
 
         return $this->successResponse($products);
@@ -60,13 +44,13 @@ class ProductController extends ApiController
 
     public function all(){
 
-        return $response = $this->sendGet(auth('api-admin')->user()['session_host'] ."/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000", auth('api-admin')->user()['session_database_key']);
+        return $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000");
 
     }
 
     public function add(){
 
-        $id = $this->sendGet(auth('api-admin')->user()['session_host'] ."/accurate/api/item/search-by-item-or-sn.do?keywords={$this->request['code']}", auth('api-admin')->user()['session_database_key']);
+        $id = $this->sendGet("/accurate/api/item/search-by-item-or-sn.do?keywords={$this->request['code']}");
 
 
         if ($id->failed()){
@@ -83,6 +67,7 @@ class ProductController extends ApiController
             "no" => $this->request['code'],
             "name" => $this->request['name'],
             "category_id" => $this->request['category'],
+            "category_name" => $this->request['category_name'],
             "type" => $this->request['type'],
             "unit_id" => $this->request['unit'],
 //            "basic_price" => $this->request['price'],
@@ -128,12 +113,13 @@ class ProductController extends ApiController
             "no" => $this->request['code'],
             "name" => $this->request['name'],
             "category_id" => $this->request['category'],
+            "category_name" => $this->request['category_name'],
             "type" => $this->request['type'],
             "unit_id" => $this->request['unit'],
-            "basic_price" => $this->request['price'],
-            "centralCommission" => $this->request['centralCommission'],
-            "partnerCommission" => $this->request['partnerCommission'],
-            "grand_price" => $this->request['grand_price'],
+            "basic_price" => $this->request->has('price') ? $this->request['price'] : 0,
+            "centralCommission" => $this->request->has('centralCommission') ? $this->request['centralCommission'] : 0,
+            "partnerCommission" => $this->request->has('partnerCommission') ? $this->request['partnerCommission'] : 0,
+            "grand_price" => $this->request->has('grand_price') ? $this->request['grand_price'] : 0,
         ];
 
         if($this->request->hasFile('image')){
@@ -163,7 +149,7 @@ class ProductController extends ApiController
 
     public function listUnit(){
 
-        $response = $this->sendGet(auth('api-admin')->user()['session_host'] ."/accurate/api/unit/list.do", auth('api-admin')->user()['session_database_key']);
+        $response = $this->sendGet("/accurate/api/unit/list.do");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false, 500);
@@ -180,7 +166,7 @@ class ProductController extends ApiController
 
     public function listCategory(){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] . "/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000", auth('api-admin')->user()['session_database_key']);
+        $response = $this->sendGet( "/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
@@ -204,7 +190,7 @@ class ProductController extends ApiController
 
     public function sync(){
 
-        $response = $this->sendGet(auth('api-admin')->user()['session_host'] ."/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000", auth('api-admin')->user()['session_database_key']);
+        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false, 500);
@@ -222,7 +208,7 @@ class ProductController extends ApiController
 
     public function check($no){
 
-        $response = $this->sendGet(auth('api-admin')->user()['session_host'] ."/accurate/api/item/search-by-no-upc.do?keywords={$no}", auth('api-admin')->user()['session_database_key']);
+        $response = $this->sendGet("/accurate/api/item/search-by-no-upc.do?keywords={$no}");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false, 500);
@@ -246,9 +232,11 @@ class ProductController extends ApiController
 
     }
 
-    public function syncStockByProductId($no, $branch_name){
+    public function syncStockByProductId($no, $userId)
+        {
+            $user = User::findOrFail($userId);
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/item/get-stock.do?warehouseName={$branch_name}&no={$no}", auth('api-admin')->user()['session_database_key']);
+        $response = $this->sendGet( "/accurate/api/item/get-stock.do?warehouseName={$user['warehouse_name']}&no={$no}");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
@@ -260,7 +248,7 @@ class ProductController extends ApiController
 
     public function syncPriceByProductId($id){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/item/detail.do?id=${id}", auth('api-admin')->user()['session_database_key']);
+        $response = $this->sendGet( "/accurate/api/item/detail.do?id=${id}");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);

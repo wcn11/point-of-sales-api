@@ -14,7 +14,7 @@ class Customer extends Model
      */
     protected $guarded = [];
 
-    protected $table = "customers";
+    protected $table = "customer";
 
     public function sales(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

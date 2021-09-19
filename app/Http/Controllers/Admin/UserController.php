@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\ApiController;
+use App\Models\Accurate;
+use App\Models\Product;
+use App\Models\ProductPartner;
 use App\Models\User;
+use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
@@ -12,7 +16,7 @@ use Tymon\JWTAuth\JWT;
 
 class UserController extends ApiController
 {
-    use ApiResponser, AccurateService;
+    use ApiResponser, AccuratePosService;
     /**
      * Create a new AuthController instance.
      *
@@ -33,7 +37,7 @@ class UserController extends ApiController
 
     public function all(){
 
-        $users = User::with("product_partner")->where(["database_accurate_id" => auth('api-admin')->user()['session_database_id']])->get();
+        $users = User::with("product_partner")->where(["accurate_database_id" => auth('api-admin')->user()['session_database_id']])->get();
 
         return $this->successResponse($users);
 
@@ -45,25 +49,32 @@ class UserController extends ApiController
 
         $user = User::create([
             "name" => $request['name'],
-            "database_accurate_id" => auth('api-admin')->user()['session_database_id'],
+            "accurate_database_id" => auth('api-admin')->user()['session_database_id'],
             "email" => $request['email'],
             "password" => Hash::make($request['password']),
             "branch_id" => $request['selectedBranch']['id'],
             "branch_name" => $request['selectedBranch']['name'],
             "warehouse_id" => $request['selectedWarehouse']['id'],
             "warehouse_name" => $request['selectedWarehouse']['name'],
-            "customer_category_id" => $request['selectedCustomerCategory']['id'],
-            "customer_category_name" => $request['selectedCustomerCategory']['name'],
             "customer_no_default" => $request['selectedCustomerDefault']['customerNo'],
             "customer_name_default" => $request['selectedCustomerDefault']['name'],
-            "glaccount_id" => $request['selectedGlAccount']['id'],
-            "glaccount_no" => $request['selectedGlAccount']['no'],
-            "glaccount_name" => $request['selectedGlAccount']['name'],
-            "commission" => $request['commission'],
             "partnerCommission" => $request['partnerCommission'],
             "is_active" => $request['is_active'],
             "is_admin" => $request['is_admin'],
         ]);
+
+        $products = Product::all()->where("accurate_database_id", "=", Accurate::all()->first()['database_id']);
+
+        foreach ($products as $product){
+
+            ProductPartner::create([
+                "user_id" => $user['id'],
+                "product_id" => $product['id'],
+                "branch_name" => $request['selectedBranch']['name'],
+                "stock" => 0,
+                "price" => 0
+            ]);
+        }
 
         return $this->successResponse($user, "Berhasil Menambahkan Pengguna Baru " .$request['name']);
     }
@@ -81,14 +92,8 @@ class UserController extends ApiController
             "branch_name" => $request['selectedBranch']['name'],
             "warehouse_id" => $request['selectedWarehouse']['id'],
             "warehouse_name" => $request['selectedWarehouse']['name'],
-            "customer_category_id" => $request['selectedCustomerCategory']['id'],
-            "customer_category_name" => $request['selectedCustomerCategory']['name'],
             "customer_no_default" => $request['selectedCustomerDefault']['id'],
             "customer_name_default" => $request['selectedCustomerDefault']['name'],
-            "glaccount_id" => $request['selectedGlAccount']['id'],
-            "glaccount_no" => $request['selectedGlAccount']['no'],
-            "glaccount_name" => $request['selectedGlAccount']['name'],
-            "commission" => $request['commission'],
             "partnerCommission" => $request['partnerCommission'],
             "is_active" => $request['is_active'],
             "is_admin" => $request['is_admin'],
@@ -155,123 +160,58 @@ class UserController extends ApiController
 
     public function warehouseLists(){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/warehouse/list.do");
+        $response = $this->sendGet( "/accurate/api/warehouse/list.do");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
         }
 
-        $ids = User::where("database_accurate_id", auth('api-admin')->user()['session_database_id'])->pluck("branch_id");
-
-        if ($ids->count() <= 0) {
-
-            return $this->successResponse($response->json()['d']);
-
-        }
-
-        $users = [];
-
-        foreach ($response->json()['d'] as $user){
-            if (!in_array($user['id'], $ids->toArray())){
-                $users[] = $user;
-            }
-        }
-
-        return $this->successResponse($users);
+        return $this->successResponse($response->json());
 
     }
 
     public function branchesLists(){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/branch/list.do?sp.pageSize=1000");
+        $response = $this->sendGet( "/accurate/api/branch/list.do?sp.pageSize=1000");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
         }
 
-        $ids = User::where("database_accurate_id", auth('api-admin')->user()['session_database_id'])->pluck("branch_id");
-
-        if ($ids->count() <= 0) {
-
-            return $this->successResponse($response->json()['d']);
-
-        }
-
-        $users = [];
-
-        foreach ($response->json()['d'] as $user){
-            if (!in_array($user['id'], $ids->toArray())){
-                $users[] = $user;
-            }
-        }
-
-        return $this->successResponse($users);
+        return $this->successResponse($response->json());
 
     }
 
     public function customerCategoryLists(){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/customer-category/list.do?fields=id,,name,category,numericField1");
+        $response = $this->sendGet( "/accurate/api/customer-category/list.do?fields=id,,name,category,numericField1");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
         }
 
-        $customer_category_id = User::where("database_accurate_id", auth('api-admin')->user()['session_database_id'])->pluck("customer_category_id");
-
-        if ($customer_category_id->count() <= 0) {
-
-            return $this->successResponse($response->json()['d']);
-
-        }
-
-        $customer_category = [];
-
-        foreach ($response->json()['d'] as $user){
-            if (!in_array($user['id'], $customer_category_id->toArray())){
-                $customer_category[] = $user;
-            }
-        }
-
-        return $this->successResponse($customer_category);
+        return $this->successResponse($response->json());
     }
 
     public function customerDefaultLists(){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/customer/list.do?fields=id,name,category,customerNo,billStreet,mobilePhone");
+        $response = $this->sendGet( "/accurate/api/customer/list.do?fields=id,name,category,customerNo,billStreet,mobilePhone");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
         }
 
-        $customer_default_no = User::where("database_accurate_id", auth('api-admin')->user()['session_database_id'])->pluck("customer_no_default");
-
-        if ($customer_default_no->count() <= 0) {
-
-            return $this->successResponse($response->json()['d']);
-
-        }
-
-        $customer_default = [];
-
-        foreach ($response->json()['d'] as $user){
-
-            if (!in_array($user['customerNo'], $customer_default_no->toArray())){
-                $customer_default[] = $user;
-            }
-        }
-
-        return $this->successResponse($customer_default);
+        return $this->successResponse($response->json());
     }
 
     public function glaccountLists(){
 
-        $response = $this->sendGet( auth('api-admin')->user()['session_host'] ."/accurate/api/glaccount/list.do?fields=id,name,no");
+        $response = $this->sendGet( "/accurate/api/glaccount/list.do?fields=id,name,no");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
         }
 
-        return $this->successResponse($response->json()['d']);
+        return $this->successResponse($response->json());
     }
 }

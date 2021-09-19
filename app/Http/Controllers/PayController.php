@@ -61,7 +61,6 @@ class PayController extends Controller
         $sales = Sales::create([
             "id" => $sales_invoice->json()['r']['id'],
             "user_id" => auth()->user()['id'],
-            "customers_id" => $this->request['customer'],
             "accurate_invoice_id" => $sales_invoice->json()['r']['id'],
             "total" => $this->request['paymentAmount'],
             "total_quantity" => 0,

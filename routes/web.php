@@ -28,7 +28,7 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
 
     $router->post('order-online/{id}', 'OrderOnlineController@updateOrderToSuccess');
 
-    $router->get('products/{id}', 'ProductController@getProductsByCategoryId');
+    $router->get('products/{id}/{name}', 'ProductController@getProductsByCategoryId');
     $router->get('add-product/{id}', 'ProductController@addProduct');
 
     $router->get('stocks', 'StockController@index');
@@ -52,7 +52,13 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
         $router->get('db-lists', "AccurateController@db_lists");
 
+        $router->post('set-database-session/{id}', "AccurateController@getSessionId");
+
+        $router->get('categories', "CategoryController@all");
+
         $router->get('items', "ProductController@index");
+
+        $router->get('category/{id}/products', "CategoryController@getProductsByCategoryId");
 
         $router->post('items/{id}', "ProductController@updateProduct");
 
@@ -70,13 +76,9 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
         $router->get('sync', "ProductController@sync");
 
-        $router->get('/sync/stock/{no}/branch/{branch_name}', "ProductController@syncStockByProductId");
+        $router->get('/sync/stock/{no}/user/{userId}', "ProductController@syncStockByProductId");
 
         $router->get('/sync/{id}/price', "ProductController@syncPriceByProductId");
-
-
-
-        $router->post('set-database-session/{id}', "AccurateController@getSessionId");
 
         //user add
         $router->get("branches-lists", "UserController@branchesLists");

@@ -44,11 +44,18 @@ class ProductController extends ApiController
 //            return $this->errorResponse("Data Tidak Ditemukan!", true);
 //        }
 
+        $product_category_name = Product::where('category_id', "=", $id)->first()['category_name'];
+
         $products = Product::with(['product_partner' => function($product_partner) {
             $product_partner->where("user_id", "=", auth()->user()['id']);
-        }])->where("accurate_database_id", auth()->user()['database_accurate_id'])->where("category_id", $id)->get();
+        }])->where("accurate_database_id", auth()->user()['accurate_database_id'])->where("category_id", $id)->get();
 
-        return $this->successResponse($products);
+        $data = [
+            'category' => $product_category_name,
+            "products" => $products
+        ];
+
+        return $this->successResponse($data);
 
     }
 

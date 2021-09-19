@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\ApiController;
+use App\Models\Accurate;
 use App\Models\Admin;
 use App\Models\User;
 use App\Traits\AccurateService;
@@ -33,7 +34,7 @@ class AccurateController extends ApiController
 
     public function db_lists(){
 
-        $response = $this->sendGet(env('ACCURATE_HOST_DASAR') ."/api/db-list.do");
+        $response = $this->sendGet("/api/db-list.do");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
@@ -45,7 +46,7 @@ class AccurateController extends ApiController
 
     public function getSessionId($id){
 
-        $response = $this->sendGet(env('ACCURATE_HOST_DASAR') ."/api/open-db.do?id=" . $id);
+        $response = $this->sendGet("/api/open-db.do?id=" . $id);
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
@@ -55,10 +56,12 @@ class AccurateController extends ApiController
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
         }
 
-        Admin::find(auth('api-admin')->user()['id'])->update([
-            "session_host" => $response->json()['host'],
-            "session_database_id" => $id,
-            "session_database_key" => $response->json()['session']
+        $accurate = Accurate::all()->first();
+
+        $accurate->update([
+            "database_id" => $id,
+            "database_host" => $response['host'],
+            "session_id" => $response['session']
         ]);
 
         return $this->successResponse($response->json());

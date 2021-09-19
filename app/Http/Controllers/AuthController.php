@@ -40,8 +40,8 @@ class AuthController extends ApiController
 //
 //        }
 
-        $this->getDatabaseById(env("ACCURATE_HOST_DASAR") . "/api/open-db.do?id=" . auth()->user()['database_accurate_id']);
-
+//        $this->getDatabaseById(env("ACCURATE_HOST_DASAR") . "/api/open-db.do?id=" . auth()->user()['database_accurate_id']);
+//
         auth()->user()['token'] = $this->respondWithToken($token);
 
         return $this->successResponse(auth()->user());
