@@ -11,6 +11,7 @@ use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\JWT;
 
@@ -52,7 +53,10 @@ class UserController extends ApiController
             "accurate_database_id" => auth('api-admin')->user()['session_database_id'],
             "email" => $request['email'],
             "password" => Hash::make($request['password']),
-            "branch_id" => $request['selectedBranch']['id'],
+            "province_id" => $request['selectedProvince']['id'],
+            "province_name" => strtoupper($request['selectedProvince']['name']),
+            "city_id" => $request['selectedCity']['id'],
+            "city_name" => strtoupper($request['selectedCity']['name']),
             "branch_name" => $request['selectedBranch']['name'],
             "warehouse_id" => $request['selectedWarehouse']['id'],
             "warehouse_name" => $request['selectedWarehouse']['name'],
@@ -88,6 +92,10 @@ class UserController extends ApiController
         $user->update([
             "name" => $request['name'],
             "email" => $request['email'],
+            "province_id" => $request['province']['id'],
+            "province_name" => $request['province']['name'],
+            "city_id" => $request['city']['id'],
+            "city_name" => $request['city']['name'],
             "branch_id" => $request['selectedBranch']['id'],
             "branch_name" => $request['selectedBranch']['name'],
             "warehouse_id" => $request['selectedWarehouse']['id'],
@@ -158,6 +166,20 @@ class UserController extends ApiController
 
     }
 
+    public function provinceLists(){
+
+        $response = DB::table("provinces")->get();
+        return $this->successResponse($response);
+
+    }
+
+    public function cityLists($id){
+
+        $response = DB::table("city")->where('province_id', '=', $id)->get();
+        return $this->successResponse($response);
+
+    }
+
     public function warehouseLists(){
 
         $response = $this->sendGet( "/accurate/api/warehouse/list.do");
@@ -182,31 +204,9 @@ class UserController extends ApiController
 
     }
 
-    public function customerCategoryLists(){
-
-        $response = $this->sendGet( "/accurate/api/customer-category/list.do?fields=id,,name,category,numericField1");
-
-        if ($response->failed()){
-            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
-        }
-
-        return $this->successResponse($response->json());
-    }
-
     public function customerDefaultLists(){
 
         $response = $this->sendGet( "/accurate/api/customer/list.do?fields=id,name,category,customerNo,billStreet,mobilePhone");
-
-        if ($response->failed()){
-            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);
-        }
-
-        return $this->successResponse($response->json());
-    }
-
-    public function glaccountLists(){
-
-        $response = $this->sendGet( "/accurate/api/glaccount/list.do?fields=id,name,no");
 
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!", false , 404);

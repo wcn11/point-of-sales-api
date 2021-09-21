@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Traits\AccuratePosService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\JWT;
 
@@ -18,7 +19,7 @@ class AuthController extends ApiController
 
     public function __construct(JWT $jwt)
     {
-        $this->middleware('auth:api', ['except' => ['login']]);
+        $this->middleware('auth:api', ['except' => ['login', 'logout']]);
         $this->jwt = $jwt;
     }
 
@@ -64,6 +65,7 @@ class AuthController extends ApiController
 
     public function logout()
     {
+        Auth::logout();
         return $this->successResponse(true, "Berhasil Keluar");
     }
 

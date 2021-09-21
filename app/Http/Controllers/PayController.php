@@ -7,6 +7,7 @@ use App\Models\Sales;
 use App\Models\SalesItem;
 use App\Traits\AccuratePosService;
 use App\Traits\ApiResponser;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -31,15 +32,20 @@ class PayController extends Controller
 
     public function pay(){
 
+        $date = Carbon::parse($this->request['date'])->format('d/m/Y');
+
         $item = [
             "customerNo" => auth()->user()['customer_no_default'],
-            "branchName" => auth()->user()['branch_name']
+            "branchName" => auth()->user()['branch_name'],
+            "transDate" => $date
         ];
+
+        $is_admin = auth()->user()['is_admin'];
 
         foreach ($this->request['carts'] as $key => $cart) {
 
             $item["detailItem[{$key}].itemNo"] = $cart['no'];
-            $item["detailItem[{$key}].unitPrice"] = $cart['basic_price'] + $cart['centralCommission'];
+            $item["detailItem[{$key}].unitPrice"] = $is_admin ? $cart['basic_price'] + $cart['centralCommission'] +  + $cart['partnerCommission'] : $cart['basic_price'] + $cart['centralCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
         }
@@ -64,7 +70,9 @@ class PayController extends Controller
             "accurate_invoice_id" => $sales_invoice->json()['r']['id'],
             "total" => $this->request['paymentAmount'],
             "total_quantity" => 0,
-            "total_additional" => $this->request['total_additional']
+            "total_additional" => $this->request['total_additional'],
+            "created_at" => $this->request['date'],
+            'updated_at' => $this->request['date']
         ]);
 
         foreach ($this->request['carts'] as $cart) {

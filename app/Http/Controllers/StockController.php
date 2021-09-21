@@ -31,9 +31,8 @@ class StockController extends ApiController
 
         $products = Product::with(["product_partner" => function($query) {
             $query->where("user_id", "=", auth()->user()['id']);
-//            $query->where("product_id", auth()->user()['id']);
         }])
-            ->where("accurate_database_id", "=", auth()->user()['database_accurate_id'])->get();
+            ->where("accurate_database_id", "=", auth()->user()['accurate_database_id'])->get();
 //        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory,itemBranchName&sp.pageSize=1000", auth()->user()['session_database_key']);
 //
 //        if ($response->failed()){

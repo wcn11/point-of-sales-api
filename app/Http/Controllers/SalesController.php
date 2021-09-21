@@ -53,7 +53,7 @@ class SalesController extends ApiController
 //                ->orderBy("created_at", "DESC")
 //                ->get();
 
-            $sales = Sales::with("sales_item")->with('customers')
+            $sales = Sales::with("sales_item")
                 ->where("user_id", auth()->user()['id'])
                 ->whereBetween('created_at',[
                     Carbon::now()->startOfDay()->format("Y-m-d H:i:s"),

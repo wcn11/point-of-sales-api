@@ -81,15 +81,13 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
         $router->get('/sync/{id}/price', "ProductController@syncPriceByProductId");
 
         //user add
+        $router->get("provinces-lists", "UserController@provinceLists");
+        $router->get("cities-lists/{id}", "UserController@cityLists");
         $router->get("branches-lists", "UserController@branchesLists");
 
         $router->get("warehouse-lists", "UserController@warehouseLists");
 
-        $router->get("customer-category-lists", "UserController@customerCategoryLists");
-
         $router->get("customer-default-lists", "UserController@customerDefaultLists");
-
-        $router->get("glaccount-lists", "UserController@glaccountLists");
 
         $router->post("user", "UserController@saveUser");
         //end of user add

@@ -86,7 +86,7 @@ class ProductController extends ApiController
 
         $product = $this->product->create($data);
 
-        $users = User::where(["database_accurate_id" => auth('api-admin')->user()['session_database_id']])->get();
+        $users = User::where(["accurate_database_id" => auth('api-admin')->user()['session_database_id']])->get();
 
         foreach ($users as $user){
 
@@ -141,7 +141,7 @@ class ProductController extends ApiController
         $user = User::with(["product_partner" => function($query) use($id){
             $query->where("product_id", $id);
         }])
-            ->where("database_accurate_id", auth('api-admin')->user()['session_database_id'])->get();
+            ->where("accurate_database_id", auth('api-admin')->user()['session_database_id'])->get();
 
         return $this->successResponse($user);
 

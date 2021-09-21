@@ -9,6 +9,7 @@ use App\Models\OrderOnline;
 use App\Models\OrderOnlineItem;
 use App\Traits\AccuratePosService;
 use App\Traits\ApiResponser;
+use http\Client\Curl\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Pusher\Pusher;
@@ -45,11 +46,19 @@ class OrderOnlineController extends Controller
 
     public function all(){
 
-        $branch_name = auth()->user()['branch_name'];
+        $city = auth()->user()['city_name'];
 
-        $order = OrderOnline::with("order_online_item")->where(DB::raw('lower(city)'), 'like', '%' . strtolower("KOTA BOGOR") . '%')
+        $order = OrderOnline::with("order_online_item")->where('city', 'like', '%' . $city . '%')
             ->get();
+//
+        $users = \App\Models\User::all()->pluck('city_name');
 
+        if (auth()->user()['is_admin']){
+
+                $order = OrderOnline::with("order_online_item")->whereNotIn('city', [$users])
+                    ->get();
+
+        }
 
         return $this->successResponse($order);
 
@@ -57,10 +66,7 @@ class OrderOnlineController extends Controller
 
     public function getOrderById($id){
 
-        $branch_name = auth()->user()['branch_name'];
-
-        $order = OrderOnline::with("order_online_item")->where("id", "=", $id)->where(DB::raw('lower(city)'), 'like', '%' . strtolower("KOTA BOGOR") . '%')
-            ->first();
+        $order = OrderOnline::with("order_online_item")->find($id);
 
         if (!$order){
             return $this->errorResponse("Faktur Tidak Ditemukan");
@@ -71,12 +77,34 @@ class OrderOnlineController extends Controller
 
     public function updateOrderToSuccess($id){
 
-        $order = $this->order->find($id);
+        $order = $this->order->with('order_online_item')->find($id);
 
         if (!$order){
             return $this->errorResponse("Pesanan Tidak Ditemukan");
         }
 
+        $item = [
+            "customerNo" => auth()->user()['customer_no_default'],
+            "branchName" => auth()->user()['branch_name']
+        ];
+
+        foreach ($order['order_online_item'] as $key => $cart) {
+
+            $item["detailItem[{$key}].itemNo"] = $cart['sku'];
+            $item["detailItem[{$key}].unitPrice"] = $cart['total_price'] ;
+            $item["detailItem[{$key}].quantity"] = $cart['quantity'];
+
+        }
+
+        $sales_invoice = $this->sendPost( "/accurate/api/sales-invoice/save.do", $item);
+
+        if ($sales_invoice->failed()){
+            return response()->json($sales_invoice->failed());
+        }
+
+        if (!$sales_invoice->json()['s']){
+            return response()->json($sales_invoice->json()['d']);
+        }
         $order->update([
             "status" => "completed"
         ]);
