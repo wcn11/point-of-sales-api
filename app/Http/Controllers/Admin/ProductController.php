@@ -104,6 +104,12 @@ class ProductController extends ApiController
 
     }
 
+    public function removeProduct($id){
+        $item = Product::find($id)->delete();
+
+        return $this->successResponse($item);
+    }
+
     public function updateProduct($id){
 
         $product = Product::findOrFail($id);

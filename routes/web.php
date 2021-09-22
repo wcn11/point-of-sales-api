@@ -66,6 +66,8 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
 
         $router->post('items', "ProductController@add");
 
+        $router->delete('items/{id}', "ProductController@removeProduct");
+
         $router->get('items/check/{no}', "ProductController@check");
 
         $router->get('items/list-unit', "ProductController@listUnit");
