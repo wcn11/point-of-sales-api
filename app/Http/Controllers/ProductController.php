@@ -46,6 +46,10 @@ class ProductController extends ApiController
 
         $product_category_name = Product::where('category_id', "=", $id)->first()['category_name'];
 
+        if(!$product_category_name){
+            return $this->errorResponse("Produk Kosong");
+        }
+
         $products = Product::with(['product_partner' => function($product_partner) {
             $product_partner->where("user_id", "=", auth()->user()['id']);
         }])->where("accurate_database_id", auth()->user()['accurate_database_id'])->where("category_id", $id)->get();
