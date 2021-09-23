@@ -83,6 +83,14 @@ class UserController extends ApiController
         return $this->successResponse($user, "Berhasil Menambahkan Pengguna Baru " .$request['name']);
     }
 
+    public function deleteUser($id){
+
+        $user = User::find($id)->delete();
+
+        return $this->successResponse($user);
+
+    }
+
     public function updateUser($id){
 
         $request = $this->request;

@@ -95,6 +95,7 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
         //end of user add
 
         $router->get('users', "UserController@all");
+        $router->delete('user/{id}', "UserController@deleteUser");
         $router->get('user/{id}', "UserController@getUserById");
         $router->put('user/{id}', "UserController@updateUser");
 
