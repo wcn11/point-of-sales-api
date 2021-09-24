@@ -108,7 +108,7 @@ class UserController extends ApiController
             "branch_name" => $request['selectedBranch']['name'],
             "warehouse_id" => $request['selectedWarehouse']['id'],
             "warehouse_name" => $request['selectedWarehouse']['name'],
-            "customer_no_default" => $request['selectedCustomerDefault']['id'],
+            "customer_no_default" => $request['selectedCustomerDefault']['customerNo'],
             "customer_name_default" => $request['selectedCustomerDefault']['name'],
             "partnerCommission" => $request['partnerCommission'],
             "is_active" => $request['is_active'],
