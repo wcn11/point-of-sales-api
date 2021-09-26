@@ -140,6 +140,29 @@ class UserController extends ApiController
 
     }
 
+    public function updateDefault(){
+
+        $userId = $this->request['user_id'];
+
+        $is_default = $this->request['is_default'];
+
+        $default = false;
+
+        if ($is_default === true || $is_default === 1){
+            $default = true;
+        }
+
+        DB::table("users")->update(["is_default" => 0]);
+
+        $users = User::find($userId)->update([
+            "is_default" => $default
+        ]);
+
+        $message =  $is_default ? "Default" : "Non-Default";
+
+        return $this->successResponse($users, "Pengguna Telah Diupdate Menjadi  " . $message);
+    }
+
     public function updateAdmin(){
 
         $userId = $this->request['user_id'];

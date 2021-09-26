@@ -64,7 +64,7 @@ $app->configure('app');
 $app->configure('dompdf');
 $app->configure('cors');
 $app->configure('database');
-
+$app->configure('mail');
 
 /*
 |--------------------------------------------------------------------------
@@ -108,9 +108,20 @@ $app->register(\Fruitcake\Cors\CorsServiceProvider::class);
  $app->register(App\Providers\EventServiceProvider::class);// Add this line
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 $app->register(Intervention\Image\ImageServiceProvider::class);
+$app->register(Illuminate\Mail\MailServiceProvider::class);
+
 //if (!class_exists('Redis')) {
 //    class_alias('Illuminate\Support\Facades\Redis', 'Redis');
 //}
+
+
+
+$app->alias('mail.manager', Illuminate\Mail\MailManager::class);
+$app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
+
+$app->alias('mailer', Illuminate\Mail\Mailer::class);
+$app->alias('mailer', Illuminate\Contracts\Mail\Mailer::class);
+$app->alias('mailer', Illuminate\Contracts\Mail\MailQueue::class);
 
 /*
 |--------------------------------------------------------------------------

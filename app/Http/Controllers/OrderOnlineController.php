@@ -7,12 +7,17 @@ use App\Events\SendNotificationEvent;
 use App\Jobs\SendNotificationNewOrderJob;
 use App\Models\OrderOnline;
 use App\Models\OrderOnlineItem;
+use App\Models\Product;
+use App\Models\ProductPartner;
+use App\Services\CheckInStock;
 use App\Traits\AccuratePosService;
 use App\Traits\ApiResponser;
-use http\Client\Curl\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Pusher\Pusher;
+use App\Models\User as UserModel;
+
 
 class OrderOnlineController extends Controller
 {
@@ -29,6 +34,10 @@ class OrderOnlineController extends Controller
      * @var OrderOnlineItem
      */
     protected $orderItem;
+    /**
+     * @var CheckInStock
+     */
+    private $stockService;
 
 
     /**
@@ -36,12 +45,13 @@ class OrderOnlineController extends Controller
      *
      * @return void
      */
-    public function __construct(Request $request, OrderOnline $order, OrderOnlineItem $orderItem)
+    public function __construct(Request $request, OrderOnline $order, OrderOnlineItem $orderItem, CheckInStock $stockService)
     {
         $this->middleware('auth:api',  ['except' => ['onlineOrder']]);
         $this->request = $request;
         $this->order = $order;
         $this->orderItem = $orderItem;
+        $this->stockService = $stockService;
     }
 
     public function all(){
@@ -94,6 +104,18 @@ class OrderOnlineController extends Controller
             $item["detailItem[{$key}].unitPrice"] = $cart['total_price'] ;
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
+            $stock = ProductPartner::where("user_id", auth()->user()['id'])->where("product_id", $cart['product_id'])->first();
+
+            if($stock['stock'] < $cart['quantity']){
+
+                return $this->errorResponse("Persediaan {$cart['name']} tidak mencukupi", false, 404);
+
+            }
+
+            $stock->update([
+                "stock" => $stock['stock'] - $cart['quantity']
+            ]);
+
         }
 
         $sales_invoice = $this->sendPost( "/accurate/api/sales-invoice/save.do", $item);
@@ -134,7 +156,14 @@ class OrderOnlineController extends Controller
 
         $order = $this->request['order'];
 
+        $user = UserModel::all()->where('city', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
+
+        if(!$user){
+            $user = UserModel::all()->where("is_default", "=", 1)->first();
+        }
+
         $onlineOrder = $this->order->create([
+            "user_id" => $user['id'],
             "web_order_id" => $this->request['order_id'],
             "payment" => $order['payment']['method'],
             "shipping_method" => $order['shipping_method'],
@@ -159,10 +188,21 @@ class OrderOnlineController extends Controller
         $total_price = 0;
         $total_weight = 0;
 
+        $data = [];
+
         foreach ($order['items'] as $item){
+
+            $productId = $this->getProductIdBySku($item['sku']) ?? null;
+
+            $data[] = [
+                "name" => $item['product']['name'],
+                "product_id" => $productId['id'],
+                "quantity" => $item['qty_ordered']
+            ];
 
             $this->orderItem->create([
                 "order_online_id" => $onlineOrder['id'],
+                "product_id" => $productId['id'],
                 "sku" => $item['sku'],
                 "name" => $item['product']['name'],
                 "url_key" => $item['product']['url_key'],
@@ -178,11 +218,26 @@ class OrderOnlineController extends Controller
             $total_weight += $item['total_weight'];
         }
 
+        $this->stockService->check($data, $user);
+
         return $this->order->findOrFail($onlineOrder['id'])->update([
             "total_quantity" => $total_quantity,
             "total_price" => $total_price,
             "total_weight" => $total_weight
          ]);
+
+    }
+
+    private function getProductIdBySku($sku){
+
+
+        if(!Cache::has("products")){
+
+            Cache::put('products', Product::all(), Carbon::now()->addMinutes(5));
+
+        }
+
+        return collect(Cache::get("products"))->where("no", $sku)->first();
 
     }
 }

@@ -7,15 +7,16 @@
     "require": {
         "php": "^7.3|^8.0",
         "ext-json": "*",
+        "ext-simplexml": "*",
         "barryvdh/laravel-dompdf": "^0.9.0",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.3",
+        "illuminate/mail": "^8.61",
         "illuminate/redis": "^8.55",
         "intervention/image": "^2.5",
         "laravel/lumen-framework": "^8.0",
         "pusher/pusher-php-server": "^4.1",
-        "tymon/jwt-auth": "^1.0",
-      "ext-simplexml": "*"
+        "tymon/jwt-auth": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
@@ -41,7 +42,8 @@
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,
-        "optimize-autoloader": true
+        "optimize-autoloader": true,
+        "platform-check": false
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
