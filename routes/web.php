@@ -22,6 +22,28 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
 
     $router->get('categories', 'CategoryController@all');
 
+    // Offer
+
+    $router->get("offers", "OfferController@getOffers");
+
+    $router->post("offer/pay", "OfferController@pay");
+
+    $router->get('offer/{id}/invoice', 'OfferController@getInvoice');
+
+    $router->get('offers/sales-report', 'OfferController@getSales');
+
+    //Promo
+    $router->group(['prefix' => 'promo'], function () use ($router){
+
+        $router->get("/", "PromoController@getPromo");
+
+        $router->post("/pay", "PromoController@pay");
+
+        $router->get('/{id}/invoice', 'PromoController@getInvoice');
+
+        $router->get('/sales-report', 'PromoController@getSales');
+    });
+
     $router->get('order-online', 'OrderOnlineController@all');
 
     $router->get('order-online/{id}', 'OrderOnlineController@getOrderById');
@@ -94,12 +116,32 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
         $router->post("user", "UserController@saveUser");
         //end of user add
 
+        //offer
+        $router->post("offer", "OfferController@saveOffer");
+        $router->post("offer/delete", "OfferController@removeOffer");
+        $router->put("offer", "OfferController@updateOffer");
+        $router->put("offer/active", "OfferController@updateStatus");
+        $router->get("offer/user/{userId}", "OfferController@getUserOffersByUserId");
+        $router->get("offer/{offerId}", "OfferController@getUserOffersById");
+        $router->get("offer/{no}/price", "OfferController@syncPriceBySKU");
+
+        //Promo
+        $router->group(['prefix' => 'promo'], function () use ($router){
+            $router->post("/", "PromoController@savePromo");
+            $router->post("/delete", "PromoController@removePromo");
+            $router->put("/", "PromoController@updatePromo");
+            $router->put("/active", "PromoController@updateStatus");
+            $router->get("/user/{userId}", "PromoController@getUserPromoByUserId");
+            $router->get("/{promoId}", "PromoController@getUserPromoById");
+            $router->get("/{no}/price", "PromoController@syncPriceBySKU");
+        });
+
         $router->get('users', "UserController@all");
         $router->delete('user/{id}', "UserController@deleteUser");
         $router->get('user/{id}', "UserController@getUserById");
         $router->put('user/{id}', "UserController@updateUser");
 
-        $router->put('users/active', "UserController@updateActive");
+        $router->post('users/active', "UserController@updateActive");
         $router->put('users/default', "UserController@updateDefault");
         $router->put('users/admin', "UserController@updateAdmin");
 

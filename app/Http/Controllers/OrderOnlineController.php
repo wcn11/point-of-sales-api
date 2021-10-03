@@ -156,11 +156,13 @@ class OrderOnlineController extends Controller
 
         $order = $this->request['order'];
 
-        $user = UserModel::all()->where('city', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
+        $user = UserModel::all()->where('city_name', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
 
         if(!$user){
             $user = UserModel::all()->where("is_default", "=", 1)->first();
         }
+
+        return $this->successResponse($user);
 
         $onlineOrder = $this->order->create([
             "user_id" => $user['id'],

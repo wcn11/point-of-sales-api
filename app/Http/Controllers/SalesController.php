@@ -46,13 +46,6 @@ class SalesController extends ApiController
 
         }else{
 
-//            $sales = Sales::with("sales_item")
-//                ->where('created_at','>=',Carbon::parse($this->request['from'])->startOfDay()->format("Y-m-d H:i:s"))
-//                ->where('created_at','<=',Carbon::parse($this->request['from'])->endOfDay()->format("Y-m-d H:i:s"))
-//                ->where("user_id", auth()->user()['id'])
-//                ->orderBy("created_at", "DESC")
-//                ->get();
-
             $sales = Sales::with("sales_item")
                 ->where("user_id", auth()->user()['id'])
                 ->whereBetween('created_at',[

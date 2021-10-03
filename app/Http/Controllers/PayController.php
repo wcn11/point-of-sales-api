@@ -121,12 +121,4 @@ class PayController extends Controller
 
         return $this->successResponse($data);
     }
-
-    public function onlineOrder(){
-
-        return DB::table("coba")->insert([
-            "name" => 123
-        ]);
-
-    }
 }

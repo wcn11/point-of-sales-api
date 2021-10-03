@@ -22,28 +22,6 @@ class ProductController extends ApiController
 
     public function getProductsByCategoryId($id){
 
-//        $response = $this->sendGet("/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000", auth()->user()['session_database_key']);
-//
-//        if ($response->failed()){
-//            return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
-//        }
-//
-//        $products = [];
-//
-//        foreach ($response->json()['d'] as $product){
-//
-//            if ($product['itemCategory']['id'] === (int)$id){
-//
-//                $products[] = $product;
-//
-//            }
-//
-//        }
-//
-//        if (count($products) <= 0){
-//            return $this->errorResponse("Data Tidak Ditemukan!", true);
-//        }
-
         $product_category_name = Product::where('category_id', "=", $id)->first()['category_name'];
 
         if(!$product_category_name){

@@ -27,7 +27,7 @@ class AccurateController extends ApiController
 
     public function __construct(JWT $jwt, Request $request)
     {
-        $this->middleware('auth:api-admin', ['except' => ['login']]);
+        $this->middleware('auth:api-admin', ['except' => ['login', 'db_lists']]);
         $this->jwt = $jwt;
         $this->request = $request;
     }

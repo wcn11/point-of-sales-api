@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Offer;
+use App\Models\Promo;
 use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use Illuminate\Support\Facades\Http;
@@ -40,7 +42,15 @@ class CategoryController extends ApiController
             $categories[] = $category['itemCategory'];
         }
 
-        return response()->json($categories);
+        $offer = Offer::all()->where("user_id", auth()->user()['id'])->where("is_active", 1)->count();
+
+        $promo = Promo::all()->where("user_id", auth()->user()['id'])->where("is_active", 1)->count();
+
+        return response()->json([
+            "categories" => $categories,
+            "offer" => $offer,
+            "promo" => $promo
+        ]);
 
     }
 }
