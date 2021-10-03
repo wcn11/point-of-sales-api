@@ -37,7 +37,8 @@ class PayController extends Controller
         $item = [
             "customerNo" => auth()->user()['customer_no_default'],
             "branchName" => auth()->user()['branch_name'],
-            "transDate" => $date
+            "transDate" => $date,
+            "description" => "POS " . strtoupper(auth()->user()['branch_name'])
         ];
 
         $is_admin = auth()->user()['is_admin'];

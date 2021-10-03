@@ -79,7 +79,8 @@ class OfferController extends ApiController
         $item = [
             "customerNo" => auth()->user()['customer_no_default'],
             "branchName" => auth()->user()['branch_name'],
-            "transDate" => $date
+            "transDate" => $date,
+            "description" => "POS Penawaran " . strtoupper(auth()->user()['branch_name'])
         ];
 
         foreach ($this->request['carts'] as $key => $cart) {
