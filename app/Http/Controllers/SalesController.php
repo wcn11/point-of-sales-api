@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
+use App\Models\ProductPartner;
 use App\Models\Sales;
-use App\Traits\AccurateService;
+use App\Traits\AccuratePosService;
 use Barryvdh\DomPDF\PDF;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -12,7 +14,7 @@ use Illuminate\Support\Str;
 
 class SalesController extends ApiController
 {
-    use AccurateService;
+    use AccuratePosService;
 
     /**
      * @var PDF
@@ -32,6 +34,7 @@ class SalesController extends ApiController
     {
         $this->pdf = $pdf;
         $this->request = $request;
+        $this->middleware('auth:api');
     }
 
     public function index(){
@@ -76,6 +79,40 @@ class SalesController extends ApiController
         $data['partnerCommission'] = auth()->user()['partnerCommission'];
 
         return $this->successResponse($data);
+
+    }
+
+    public function removeSalesById($invoiceId){
+
+        $sales_invoice = $this->sendDelete( "/accurate/api/sales-invoice/delete.do", ["id" => $invoiceId]);
+
+        if ($sales_invoice->json()['s']){
+
+            $sales = Sales::where('accurate_invoice_id', '=', $invoiceId)->with('sales_item')->first();
+
+            foreach ($sales['sales_item'] as $sale){
+
+                $product = Product::where("no", "=", $sale['product_accurate_no'])->first();
+
+                $stock = ProductPartner::where("user_id", "=", auth()->user()['id'])->where("product_id", '=', $product['id'])->first();
+
+                $stock->update([
+                    "stock" => $stock['stock'] + $sale['quantity']
+                ]);
+
+            }
+
+            Sales::findOrFail($invoiceId)->delete();
+
+        }
+
+        if ($sales_invoice->failed()){
+
+            return response()->json($sales_invoice->json());
+
+        }
+
+        return response()->json($sales_invoice->json());
 
     }
 }

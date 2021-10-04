@@ -25,7 +25,7 @@ class ProductController extends ApiController
         $product_category_name = Product::where('category_id', "=", $id)->first()['category_name'];
 
         if(!$product_category_name){
-            return $this->errorResponse("Produk Kosong");
+            return $this->errorResponse("Produk Kosong Atau Tidak Ditemukan");
         }
 
         $products = Product::with(['product_partner' => function($product_partner) {

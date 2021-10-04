@@ -215,4 +215,38 @@ class OfferController extends ApiController
         return $this->successResponse($data);
 
     }
+
+    public function removeSalesById($invoiceId){
+
+        $sales_invoice = $this->sendDelete( "/accurate/api/sales-invoice/delete.do", ["id" => $invoiceId]);
+
+        if ($sales_invoice->json()['s']){
+
+            $sales = SalesOffer::where('accurate_invoice_id', '=', $invoiceId)->with('sales_offer_item')->first();
+
+            foreach ($sales['sales_offer_item'] as $sale){
+
+                $product = Product::where("no", "=", $sale['product_accurate_no'])->first();
+
+                $stock = ProductPartner::where("user_id", "=", auth()->user()['id'])->where("product_id", '=', $product['id'])->first();
+
+                $stock->update([
+                    "stock" => $stock['stock'] + $sale['quantity']
+                ]);
+
+            }
+
+            SalesOffer::findOrFail($invoiceId)->delete();
+
+        }
+
+        if ($sales_invoice->failed()){
+
+            return response()->json($sales_invoice->json());
+
+        }
+
+        return response()->json($sales_invoice->json());
+
+    }
 }

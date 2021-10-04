@@ -32,6 +32,8 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
 
     $router->get('offers/sales-report', 'OfferController@getSales');
 
+    $router->post('offers/sales-report/invoice/{invoiceId}', 'OfferController@removeSalesById');
+
     //Promo
     $router->group(['prefix' => 'promo'], function () use ($router){
 
@@ -42,6 +44,9 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
         $router->get('/{id}/invoice', 'PromoController@getInvoice');
 
         $router->get('/sales-report', 'PromoController@getSales');
+
+        $router->post('/sales-report/invoice/{invoiceId}', 'PromoController@removeSalesById');
+
     });
 
     $router->get('order-online', 'OrderOnlineController@all');
@@ -66,6 +71,8 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
     $router->get('pay/{id}/invoice', 'PayController@getInvoice');
 
     $router->get('sales-report', 'SalesController@index');
+
+    $router->post('sales-report/invoice/{invoiceId}', 'SalesController@removeSalesById');
 });
 
 $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($router){

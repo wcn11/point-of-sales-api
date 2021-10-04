@@ -53,6 +53,10 @@ trait AccuratePosService{
             if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
                 $this->refresh_token($accurate['refresh_token'], $url);
             }
+
+            if ($response->json()['d'][0] === "Data Session Key tidak tepat"){
+                $this->getDatabaseById(  env("ACCURATE_HOST_DASAR"). "/api/open-db.do?id=" . $accurate['database_id']);
+            }
         }
 
         return $response;
@@ -78,7 +82,26 @@ trait AccuratePosService{
         return $this->sendGet($url);
     }
 
+
     public function sendPost($url = "", $data = [], $bodyType = "form", $authorizationType = "Bearer "){
+
+        $accurate = Accurate::all()->first();
+
+        if ($bodyType === "form"){
+            return Http::withHeaders([
+                'Authorization' => $authorizationType . " " . $accurate['access_token'],
+                'X-Session-ID' => $accurate['session_id'],
+            ])->asForm()->post($accurate['database_host'] . $url, $data);
+        }
+
+        return Http::withHeaders([
+            'Authorization' => $authorizationType . " " . $accurate['access_token'],
+            'X-Session-ID' => $accurate['session_id'],
+        ])->asJson()->post($accurate['database_host'] . $url, $data);
+
+    }
+
+    public function sendDelete($url = "", $data = 0, $bodyType = "form", $authorizationType = "Bearer "){
 
         $accurate = Accurate::all()->first();
 
