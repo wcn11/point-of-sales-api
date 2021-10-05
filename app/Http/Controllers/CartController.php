@@ -204,6 +204,12 @@ class CartController extends ApiController
 
             $cartItem = $this->cartItem->findOrFail($this->request['id']);
 
+            $stock = $this->productPartner->where("user_id", '=', auth()->user()['id'])->where("product_id", '=', $cartItem['product_id'])->first();
+
+            $stock->update([
+                "stock" => $stock['stock'] + $cartItem['quantity']
+            ]);
+
             $cartItem->delete();
 
             $cartItemTotal = $this->cartItem->where("user_id", "=", auth()->user()['id']);
@@ -239,6 +245,12 @@ class CartController extends ApiController
         try {
 
             $cartItem = $this->cartItem->where("user_id", "=", auth()->user()['id'])->where("product_id", "=", $this->request['id'])->first();
+
+            $stock = $this->productPartner->where("user_id", '=', auth()->user()['id'])->where("product_id", '=', $cartItem['product_id'])->first();
+
+            $stock->update([
+                "stock" => $stock['stock'] + $cartItem['quantity']
+            ]);
 
             $cartItem->delete();
 
