@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Offer;
 use App\Models\Promo;
 use App\Traits\AccuratePosService;
-use App\Traits\AccurateService;
-use Illuminate\Support\Facades\Http;
 
 class CategoryController extends ApiController
 {

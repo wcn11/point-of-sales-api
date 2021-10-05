@@ -41,29 +41,36 @@ trait AccuratePosService{
             'X-Session-ID' => $accurate['session_id'],
         ])->get( $accurate['database_host'] . $url);
 
-        if(isset($response['s'])){
+        if(isset($response['s']) && $response['s'] === true){
             return $response;
         }
 
         if ($response->failed()){
+
+
+            if(isset($response['s']) && $response['s'] === false){
+
+                return $this->checkSessionDB($url, __FUNCTION__);
+
+            }
+
             $data = simplexml_load_string($response);
 
             $error = json_encode($data);
 
             if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
-                $this->refresh_token($accurate['refresh_token'], $url);
+
+                return $this->refresh_token($url, __FUNCTION__);
+
             }
 
-            if ($response->json()['d'][0] === "Data Session Key tidak tepat"){
-                $this->getDatabaseById(  env("ACCURATE_HOST_DASAR"). "/api/open-db.do?id=" . $accurate['database_id']);
-            }
         }
 
         return $response;
 
     }
 
-    public function refresh_token($refresh_token, $url)
+    private function refresh_token($url, $function)
     {
         $accurate_config = Accurate::all()->first();
 
@@ -71,7 +78,7 @@ trait AccuratePosService{
             'Authorization' => "Basic " . base64_encode(env("ACCURATE_CLIENT_ID") . ":" . env("ACCURATE_CLIENT_SECRET")),
         ])->asForm()->post(env("ACCURATE_HOST_DASAR") . "/oauth/token", [
             "grant_type" => "refresh_token",
-            "refresh_token" => $refresh_token
+            "refresh_token" => $accurate_config['refresh_token']
         ]);
 
         $accurate_config->update([
@@ -79,7 +86,45 @@ trait AccuratePosService{
             'refresh_token' => $accurate['refresh_token'],
         ]);
 
-        return $this->sendGet($url);
+        return $this->checkSessionDB($url, $function);
+    }
+
+    public function checkSessionDB($url, $function){
+
+        $accurate_config = Accurate::all()->first();
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer " . $accurate_config['access_token']
+        ])->get( env("ACCURATE_HOST_DASAR") . "/api/db-check-session.do?session=" . $accurate_config['session_id']);
+
+        if ($response['s'] && $response['d'] === false){
+
+            return $this->refreshSessionDB($url, $function);
+
+        }
+
+        return $this->$function($url);
+
+    }
+
+    private function refreshSessionDB($url, $function){
+
+        $accurate_config = Accurate::all()->first();
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer " . $accurate_config['access_token']
+        ])->get( env("ACCURATE_HOST_DASAR") . "/api/db-refresh-session.do?id=398334&session=" . $accurate_config['session_id']);
+
+        if($response['s'] && $response['d']['session']){
+
+            $accurate_config->update([
+                'database_host' => $response['d']['host'],
+                'session_id' => $response['d']['session'],
+            ]);
+
+        }
+
+        return $this->$function($url);
     }
 
 
@@ -88,16 +133,46 @@ trait AccuratePosService{
         $accurate = Accurate::all()->first();
 
         if ($bodyType === "form"){
-            return Http::withHeaders([
+            $response = Http::withHeaders([
                 'Authorization' => $authorizationType . " " . $accurate['access_token'],
                 'X-Session-ID' => $accurate['session_id'],
             ])->asForm()->post($accurate['database_host'] . $url, $data);
+
+        }else{
+
+            $response = Http::withHeaders([
+                'Authorization' => $authorizationType . " " . $accurate['access_token'],
+                'X-Session-ID' => $accurate['session_id'],
+            ])->asJson()->post($accurate['database_host'] . $url, $data);
+
         }
 
-        return Http::withHeaders([
-            'Authorization' => $authorizationType . " " . $accurate['access_token'],
-            'X-Session-ID' => $accurate['session_id'],
-        ])->asJson()->post($accurate['database_host'] . $url, $data);
+        if(isset($response['s']) && $response['s'] === true){
+            return $response;
+        }
+
+        if ($response->failed()){
+
+
+            if(isset($response['s']) && $response['s'] === false){
+
+                return $this->checkSessionDB($url, __FUNCTION__);
+
+            }
+
+            $data = simplexml_load_string($response);
+
+            $error = json_encode($data);
+
+            if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
+
+                return $this->refresh_token($url, __FUNCTION__);
+
+            }
+
+        }
+
+        return $response;
 
     }
 
@@ -106,16 +181,45 @@ trait AccuratePosService{
         $accurate = Accurate::all()->first();
 
         if ($bodyType === "form"){
-            return Http::withHeaders([
+            $response = Http::withHeaders([
                 'Authorization' => $authorizationType . " " . $accurate['access_token'],
                 'X-Session-ID' => $accurate['session_id'],
             ])->asForm()->post($accurate['database_host'] . $url, $data);
+        }else{
+
+            $response = Http::withHeaders([
+                'Authorization' => $authorizationType . " " . $accurate['access_token'],
+                'X-Session-ID' => $accurate['session_id'],
+            ])->asJson()->post($accurate['database_host'] . $url, $data);
+
         }
 
-        return Http::withHeaders([
-            'Authorization' => $authorizationType . " " . $accurate['access_token'],
-            'X-Session-ID' => $accurate['session_id'],
-        ])->asJson()->post($accurate['database_host'] . $url, $data);
+        if(isset($response['s']) && $response['s'] === true){
+            return $response;
+        }
+
+        if ($response->failed()){
+
+
+            if(isset($response['s']) && $response['s'] === false){
+
+                return $this->checkSessionDB($url, __FUNCTION__);
+
+            }
+
+            $data = simplexml_load_string($response);
+
+            $error = json_encode($data);
+
+            if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
+
+                return $this->refresh_token($url, __FUNCTION__);
+
+            }
+
+        }
+
+        return $response;
 
     }
 
@@ -123,49 +227,38 @@ trait AccuratePosService{
 
         $accurate = Accurate::all()->first();
 
-        $accurate = Http::withHeaders([
+        $response = Http::withHeaders([
             'Authorization' => $authorizationType . " " . $accurate['access_token'],
         ])->get($url);
 
-        if ($accurate['s']){
+        if (isset($response['s']) && $response['s'] === true){
             $accurate->update([
                 "database_host" => $accurate['host'],
                 "session_id" => $accurate['session']
             ]);
         }
 
-        return $accurate;
-    }
+        if ($response->failed()){
 
-//    public function checkSession(){
-//
-//        return $this->sendCheck(env('ACCURATE_HOST_DASAR') . '/api/db-list.do');
-//
-//    }
-//
-//    public function sendCheck($url = "", $authorizationType = "Bearer ", $method = "get")
-//    {
-//         $response = Http::withHeaders([
-//            'Authorization' => $authorizationType . " " . env("ACCURATE_ACCESS_TOKEN"),
-//        ])->get($url);
-//
-//         if ($response->failed()){
-//             return $response->status();
-//         }
-//
-//         if ($response->json()['s']){
-//
-//             if ($response->json(['d'][0]['expired'])){
-//
-//                 $this->refreshSession();
-//             }
-//
-//         }
-//
-//         return $response->json();
-//    }
-//
-//    private function refreshSession(){
-//
-//    }
+
+            if(isset($response['s']) && $response['s'] === false){
+
+                return $this->checkSessionDB($url, __FUNCTION__);
+
+            }
+
+            $data = simplexml_load_string($response);
+
+            $error = json_encode($data);
+
+            if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
+
+                return $this->refresh_token($url, __FUNCTION__);
+
+            }
+
+        }
+
+        return $response;
+    }
 }
