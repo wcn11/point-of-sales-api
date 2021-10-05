@@ -73,7 +73,8 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
     $router->get('sales-report', 'SalesController@index');
 
     $router->post('sales-report/invoice/{invoiceId}', 'SalesController@removeSalesById');
-    //Promo
+
+    //Cart
     $router->group(['prefix' => 'cart'], function () use ($router){
 
         $router->get('/', 'CartController@index');
@@ -81,6 +82,10 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
         $router->post('/', 'CartController@store');
 
         $router->put('/', 'CartController@update');
+
+        $router->post('/delete/{id}', 'CartController@delete');
+
+        $router->post('/product/delete/{id}', 'CartController@deleteByProductId');
 
     });
 });

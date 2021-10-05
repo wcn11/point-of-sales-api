@@ -189,4 +189,76 @@ class CartController extends ApiController
 
         return $this->successResponse($cartItem);
     }
+
+    public function delete(){
+
+        $validator = Validator::make($this->request->all(), [
+            'id' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse("Produk Tidak Ditemukan", false, 404);
+        }
+
+        try {
+
+            $cartItem = $this->cartItem->findOrFail($this->request['id']);
+
+            $cartItem->delete();
+
+            $cartItemTotal = $this->cartItem->where("user_id", "=", auth()->user()['id']);
+
+            if($cartItemTotal->count() <= 0){
+
+                $cart = $this->cart->where("user_id", "=", auth()->user()['id'])->first();
+
+                $cart->delete();
+
+            }
+
+            return $this->successResponse($cartItemTotal, "Produk Dihapus");
+
+        }catch (\Exception $e){
+
+            return $this->errorResponse("Produk Dalam Keranjang Anda Tidak Ditemukan");
+
+        }
+
+    }
+
+    public function deleteByProductId($id){
+
+        $validator = Validator::make($this->request->all(), [
+            'id' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse("Produk Tidak Ditemukan", false, 404);
+        }
+
+        try {
+
+            $cartItem = $this->cartItem->where("user_id", "=", auth()->user()['id'])->where("product_id", "=", $this->request['id'])->first();
+
+            $cartItem->delete();
+
+            $cartItemTotal = $this->cartItem->where("user_id", "=", auth()->user()['id']);
+
+            if($cartItemTotal->count() <= 0){
+
+                $cart = $this->cart->where("user_id", "=", auth()->user()['id'])->first();
+
+                $cart->delete();
+
+            }
+
+            return $this->successResponse($cartItemTotal, "Produk Dihapus");
+
+        }catch (\Exception $e){
+
+            return $this->errorResponse("Produk Dalam Keranjang Anda Tidak Ditemukan");
+
+        }
+
+    }
 }
