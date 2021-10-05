@@ -89,7 +89,7 @@ class CartController extends ApiController
                 "name" => $product['name'],
                 "category_name" => $product['category_name'],
                 "category_id" => $product['category_id'],
-                "stock" => $product['stock'] - 1,
+                "stock" => $product['stock'],
                 "stock_temp" => $product['stock_temp'] - 1,
                 "type" => $product['type'],
                 "unit_id" => $product['unit_id'],
@@ -104,7 +104,7 @@ class CartController extends ApiController
             ]);
 
             $stock->update([
-                "stock" => $product['stock'] - 1
+                "stock" => $product['stock']
             ]);
 
             return $this->successResponse($cartItem, "Berhasil Menambahkan");
@@ -132,8 +132,8 @@ class CartController extends ApiController
             "name" => $product['name'],
             "category_name" => $product['category_name'],
             "category_id" => $product['category_id'],
-            "stock" => $product['stock'] - 1,
-            "stock_temp" => $product['stock_temp'] - 1,
+            "stock" => $product['stock'],
+            "stock_temp" => $product['stock_temp'],
             "type" => $product['type'],
             "unit_id" => $product['unit_id'],
             "unit_name" => $product['unit_name'],
@@ -147,7 +147,7 @@ class CartController extends ApiController
         ]);
 
         $stock->update([
-            "stock" => $product['stock'] - 1
+            "stock" => $product['stock']
         ]);
 
         return $this->successResponse($cartItem, "Berhasil Menambahkan");
@@ -193,18 +193,20 @@ class CartController extends ApiController
     public function delete(){
 
         $validator = Validator::make($this->request->all(), [
-            'id' => 'required'
+            'cart' => 'required'
         ]);
 
         if ($validator->fails()) {
+
             return $this->errorResponse("Produk Tidak Ditemukan", false, 404);
+
         }
 
-        try {
+//        try {
 
-            $cartItem = $this->cartItem->findOrFail($this->request['id']);
+            $cartItem = $this->cartItem->where("user_id", "=", auth()->user()['id'])->where("product_id", "=", $this->request['cart']['product_id'])->first();
 
-            $stock = $this->productPartner->where("user_id", '=', auth()->user()['id'])->where("product_id", '=', $cartItem['product_id'])->first();
+            $stock = $this->productPartner->where("user_id", '=', auth()->user()['id'])->where("product_id", '=', $this->request['cart']['product_id'])->first();
 
             $stock->update([
                 "stock" => $stock['stock'] + $cartItem['quantity']
@@ -224,11 +226,11 @@ class CartController extends ApiController
 
             return $this->successResponse($cartItemTotal, "Produk Dihapus");
 
-        }catch (\Exception $e){
-
-            return $this->errorResponse("Produk Dalam Keranjang Anda Tidak Ditemukan");
-
-        }
+//        }catch (\Exception $e){
+//
+//            return $this->errorResponse("Produk Dalam Keranjang Anda Tidak Ditemukan");
+//
+//        }
 
     }
 
@@ -242,7 +244,7 @@ class CartController extends ApiController
             return $this->errorResponse("Produk Tidak Ditemukan", false, 404);
         }
 
-        try {
+//        try {
 
             $cartItem = $this->cartItem->where("user_id", "=", auth()->user()['id'])->where("product_id", "=", $this->request['id'])->first();
 
@@ -266,11 +268,11 @@ class CartController extends ApiController
 
             return $this->successResponse($cartItemTotal, "Produk Dihapus");
 
-        }catch (\Exception $e){
+//        }catch (\Exception $e){
 
             return $this->errorResponse("Produk Dalam Keranjang Anda Tidak Ditemukan");
 
-        }
+//        }
 
     }
 }
