@@ -73,6 +73,16 @@ $router->group(['middleware' => ['auth:api']], function () use ($router){
     $router->get('sales-report', 'SalesController@index');
 
     $router->post('sales-report/invoice/{invoiceId}', 'SalesController@removeSalesById');
+    //Promo
+    $router->group(['prefix' => 'cart'], function () use ($router){
+
+        $router->get('/', 'CartController@index');
+
+        $router->post('/', 'CartController@store');
+
+        $router->put('/', 'CartController@update');
+
+    });
 });
 
 $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($router){

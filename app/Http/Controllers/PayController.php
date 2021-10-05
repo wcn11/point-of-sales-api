@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\ProductPartner;
 use App\Models\Sales;
 use App\Models\SalesItem;
@@ -18,37 +19,61 @@ class PayController extends Controller
      * @var Request
      */
     protected $request;
+    /**
+     * @var Cart
+     */
+    protected $cart;
 
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct(Request $request)
+    public function __construct(Request $request, Cart $cart)
     {
         $this->middleware('auth:api',  ['except' => ['downloadReceipt', 'onlineOrder']]);
         $this->request = $request;
+        $this->cart = $cart;
     }
 
     public function pay(){
 
         $date = Carbon::parse($this->request['date'])->format('d/m/Y');
 
+        $carts = $this->cart->with("cart_item")->where("user_id", '=', auth()->user()['id'])->first();
+
+        if(!$carts){
+
+            return $this->errorResponse("Keranjang Anda Kosong", false, 404);
+
+        }
+
         $item = [
             "customerNo" => auth()->user()['customer_no_default'],
             "branchName" => auth()->user()['branch_name'],
-            "transDate" => $date,
+            "transDate" => $date ,
             "description" => "POS " . strtoupper(auth()->user()['branch_name'])
         ];
 
         $is_admin = auth()->user()['is_admin'];
 
-        foreach ($this->request['carts'] as $key => $cart) {
+        $totalAdditional = 0;
+        $paymentAmount = 0;
+        $totalQuantity = 0;
+        $totalCommission = 0;
+        $totalDebt = 0;
+
+        foreach ($carts['cart_item'] as $key => $cart) {
 
             $item["detailItem[{$key}].itemNo"] = $cart['no'];
             $item["detailItem[{$key}].unitPrice"] = $is_admin ? $cart['basic_price'] + $cart['centralCommission'] +  + $cart['partnerCommission'] : $cart['basic_price'] + $cart['centralCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
+            $totalAdditional += $cart['additionalPrice'];
+            $paymentAmount += $cart['grand_price'] * $cart['quantity'];
+            $totalQuantity += $cart['quantity'];
+            $totalCommission += $cart['partnerCommission'] * $cart['quantity'];
+            $totalDebt += ($cart['basic_price'] + $cart['centralCommission']) * $cart['quantity'];
         }
 
         $sales_invoice = $this->sendPost( "/accurate/api/sales-invoice/save.do", $item);
@@ -61,22 +86,20 @@ class PayController extends Controller
             return response()->json($sales_invoice->json()['d']);
         }
 
-        $totalQuantity = 0;
-        $totalDebt = 0;
-        $totalCommission = 0;
-
         $sales = Sales::create([
             "id" => $sales_invoice->json()['r']['id'],
             "user_id" => auth()->user()['id'],
             "accurate_invoice_id" => $sales_invoice->json()['r']['id'],
-            "total" => $this->request['paymentAmount'],
-            "total_quantity" => 0,
-            "total_additional" => $this->request['total_additional'],
-            "created_at" => $this->request['date'],
-            'updated_at' => $this->request['date']
+            "total" => $paymentAmount,
+            "total_quantity" => $totalQuantity,
+            "total_additional" => $totalAdditional,
+            "total_commission" => $totalCommission,
+            "total_debt" => $totalDebt,
+            "date" => $this->request['date'],
+            "time" => $this->request['time']
         ]);
 
-        foreach ($this->request['carts'] as $cart) {
+        foreach ($carts['cart_item'] as $cart) {
 
             $salesItem[] = SalesItem::create([
                 "category_id" => $cart['category_id'],
@@ -87,24 +110,12 @@ class PayController extends Controller
                 "basic_price" => $cart['basic_price'],
                 "centralCommission" => $cart['centralCommission'],
                 "partnerCommission" => $cart['partnerCommission'],
-                "grand_price" => ($cart['basic_price'] + $cart['centralCommission'] + $cart['partnerCommission']) * $cart['quantity'],
+                "grand_price" => $cart['grand_price'],
             ]);
-
-            ProductPartner::find($cart['product_partner'][0]['id'])->update([
-                "stock" => $cart['stock']
-            ]);
-
-            $totalQuantity += $cart['quantity'];
-            $totalCommission += $cart['partnerCommission'] * $cart['quantity'];
-            $totalDebt += ($cart['basic_price'] + $cart['centralCommission']) * $cart['quantity'];
 
         }
 
-        Sales::find($sales['id'])->update([
-            "total_quantity" => $totalQuantity,
-            "total_debt" => $totalDebt,
-            "total_commission" => $totalCommission,
-        ]);
+        $carts->delete();
 
         return $this->successResponse($sales_invoice->json());
 
