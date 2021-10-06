@@ -23,6 +23,10 @@ class CategoryController extends ApiController
 
         $response = $this->sendGet( "/accurate/api/item/list.do?fields=id,no,name,branchPrice,unitPrice,itemCategory&sp.pageSize=1000");
 
+        if(isset($response['system_error'])){
+            return $this->errorResponse($response['message'], false, 500);
+        }
+
         if ($response->failed()){
             return $this->errorResponse("Terjadi Kesalahan Sistem! Tidak Terhubung Dengan Accurate! Harap Hubungi Administrator!");
         }

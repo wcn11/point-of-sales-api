@@ -36,6 +36,7 @@ trait AccuratePosService{
 
     public function sendGet($url, $authorizationType = "Bearer "){
         $accurate = Accurate::all()->first();
+
         $response = Http::withHeaders([
             'Authorization' => $authorizationType . " " . $accurate['access_token'],
             'X-Session-ID' => $accurate['session_id'],
@@ -45,24 +46,35 @@ trait AccuratePosService{
             return $response;
         }
 
-        if ($response->failed()){
+
+        try {
+
+            if ($response->failed()){
 
 
-            if(isset($response['s']) && $response['s'] === false){
+                if(isset($response['s']) && $response['s'] === false){
 
-                return $this->checkSessionDB($url, __FUNCTION__);
+                    return $this->checkSessionDB($url, __FUNCTION__);
+
+                }
+
+                    $data = simplexml_load_string($response);
+
+                    $error = json_encode($data);
+
+                    if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
+
+                        return $this->refresh_token($url, __FUNCTION__);
+
+                    }
 
             }
+        }catch (\Exception $e){
 
-            $data = simplexml_load_string($response);
-
-            $error = json_encode($data);
-
-            if (isset(json_decode($error, true)['error']) || isset(json_decode($error, true)['error']) == "invalid_token"){
-
-                return $this->refresh_token($url, __FUNCTION__);
-
-            }
+            $response = [
+                "system_error" => true,
+                "message" => "Kegagalan Sistem Accurate, Harap Hubungi Administrator"
+            ];
 
         }
 
