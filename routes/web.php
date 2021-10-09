@@ -16,8 +16,15 @@
 $router->get('/', function () use ($router) {
     return "Halo Hackers... :)";
 });
+$router->post('/broadcast/auth','BroadcastController@authenticate');
 
 $router->group(['middleware' => ['auth:api']], function () use ($router){
+
+//    $router->group(['prefix' => 'v1'], function () use ($router) {
+
+
+//    });
+
     $router->get('me', 'AuthController@me');
 
     $router->get('categories', 'CategoryController@all');

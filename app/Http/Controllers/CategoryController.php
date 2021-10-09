@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SendNotificationEvent;
+use App\Jobs\SendNotificationNewOrderJob;
 use App\Models\Offer;
 use App\Models\Promo;
 use App\Traits\AccuratePosService;

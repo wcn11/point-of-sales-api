@@ -140,4 +140,10 @@ $app->router->group([
     require __DIR__.'/../routes/web.php';
 });
 
+$app->router->group([
+    'middleware' => 'auth:api',
+], function () {
+    require __DIR__.'/../routes/channels.php';
+});
+
 return $app;
