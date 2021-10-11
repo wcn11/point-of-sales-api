@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\SendNotificationEvent;
 use App\Http\Controllers\ApiController;
 use App\Models\Accurate;
 use App\Models\Product;
 use App\Models\ProductPartner;
 use App\Models\User;
+use App\Models\User as UserModel;
 use App\Traits\AccuratePosService;
 use App\Traits\AccurateService;
 use App\Traits\ApiResponser;
@@ -211,6 +213,20 @@ class UserController extends ApiController
 
     }
 
+    public function districtLists($id){
+
+        $response = DB::table("districts")->where('district_id', '=', $id)->get();
+        return $this->successResponse($response);
+
+    }
+
+    public function subDistrictLists($id){
+
+        $response = DB::table("sub_districts")->where('kecamatan_id', '=', $id)->get();
+        return $this->successResponse($response);
+
+    }
+
     public function warehouseLists(){
 
         $response = $this->sendGet( "/accurate/api/warehouse/list.do");
@@ -244,5 +260,103 @@ class UserController extends ApiController
         }
 
         return $this->successResponse($response->json());
+    }
+
+    public function onlineOrder(){
+
+        return $this->request;
+
+//        event(new SendNotificationEvent('wehehehe ashiap'));
+
+//        $options = array(
+//            'cluster' => 'mt1',
+//            'useTLS' => false
+//        );
+//        $pusher = new Pusher(
+//            '2ad75c76131decfaff1d',
+//            'a00ef1dc163cc628775e',
+//            '1266323',
+//            $options
+//        );
+//
+//        $data['message'] = 'wokwko';
+//        $pusher->trigger('new-order', 'newOrder', $data);
+//        dispatch(new SendNotificationNewOrderJob("dataaa"));
+
+        $order = $this->request['order'];
+
+        $user = UserModel::all()->where('city_name', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
+
+        if(!$user){
+            $user = UserModel::all()->where("is_default", "=", 1)->first();
+        }
+
+        $this->successResponse($user);
+
+        $onlineOrder = $this->order->create([
+            "user_id" => $user['id'],
+            "web_order_id" => $this->request['order_id'],
+            "payment" => $order['payment']['method'],
+            "shipping_method" => $order['shipping_method'],
+            "shipping_title" => $order['shipping_title'],
+            "customer_first_name" => $order['customer_first_name'],
+            "customer_last_name" => $order['customer_last_name'],
+            "customer_email" => $order['customer_email'],
+            "company_name" => $order['shipping_address']['company_name'],
+            "address1" => $order['shipping_address']['address1'],
+            "phone" => $order['shipping_address']['phone'],
+            "sub_district" => $order['shipping_address']['sub_district'],
+            "district" => $order['shipping_address']['district'],
+            "city" => $order['shipping_address']['city'],
+            "state" => $order['shipping_address']['state'],
+            "postcode" => $order['shipping_address']['postcode'],
+            "status" => "pending",
+            "note" => $this->request['notes']['notes']
+        ]);
+
+        $total_quantity = 0;
+        $total_price = 0;
+        $total_weight = 0;
+
+        $data = [];
+
+        foreach ($order['items'] as $item){
+
+            $productId = $this->getProductIdBySku($item['sku']) ?? null;
+
+            $data[] = [
+                "name" => $item['product']['name'],
+                "product_id" => $productId['id'],
+                "quantity" => $item['qty_ordered']
+            ];
+
+            $this->orderItem->create([
+                "order_online_id" => $onlineOrder['id'],
+                "product_id" => $productId['id'],
+                "sku" => $item['sku'],
+                "name" => $item['product']['name'],
+                "url_key" => $item['product']['url_key'],
+                "price" => $item['product']['price'],
+                "weight" => $item['product']['weight'],
+                "total_weight" => $item['total_weight'],
+                "quantity" => $item['qty_ordered'],
+                "total_price" => $item['total'],
+            ]);
+
+            $total_quantity += $item['qty_ordered'];
+            $total_price += $item['total'];
+            $total_weight += $item['total_weight'];
+        }
+
+        $this->stockService->check($data, $user);
+
+        event(new SendNotificationEvent('woyy', auth()->user()['id']));
+
+        return $this->order->findOrFail($onlineOrder['id'])->update([
+            "total_quantity" => $total_quantity,
+            "total_price" => $total_price,
+            "total_weight" => $total_weight
+        ]);
+
     }
 }

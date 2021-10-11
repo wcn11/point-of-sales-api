@@ -16,9 +16,13 @@
 $router->get('/', function () use ($router) {
     return "Halo Hackers... :)";
 });
-$router->post('/broadcast/auth','BroadcastController@authenticate');
 
 $router->group(['middleware' => ['auth:api']], function () use ($router){
+    $router->post('/broadcasting/auth','BroadcastController@authenticate');
+
+//    $router->group(['middleware' => 'auth'], function () use ($router) {
+//        $router->post('broadcasting/auth', ['uses' => 'BroadcastController@authenticate']);
+//    });
 
 //    $router->group(['prefix' => 'v1'], function () use ($router) {
 
@@ -136,6 +140,8 @@ $router->group(['prefix' => "admin", "namespace" => "Admin"], function () use ($
         //user add
         $router->get("provinces-lists", "UserController@provinceLists");
         $router->get("cities-lists/{id}", "UserController@cityLists");
+        $router->get("district-lists/{id}", "UserController@districtLists");
+        $router->get("subdistrict-lists/{id}", "UserController@subDistrictLists");
         $router->get("branches-lists", "UserController@branchesLists");
 
         $router->get("warehouse-lists", "UserController@warehouseLists");

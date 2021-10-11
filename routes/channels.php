@@ -13,17 +13,6 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-//Broadcast::channel('App.User.{id}', function ($user, $id) {
-//    return (int) $user->id === (int) $id;
-//});
-
-//$router->addRoute(
-//    ['get', 'post'], '/broadcasting/auth',
-//    '\\' . \App\Http\Controllers\BroadcastController::class . '@authenticate'
-//);
-
-Broadcast::channel('new-order.48', function ($user_id) {
-
-    return true; //(int) auth()->user()['id'] === (int) $user_id;
-
+Broadcast::channel('new-order.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
 });

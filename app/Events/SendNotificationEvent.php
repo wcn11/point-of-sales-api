@@ -16,18 +16,18 @@ class SendNotificationEvent extends Event implements ShouldBroadcast, ShouldQueu
 
     public $broadcastQueue = 'new_online_order';
 
-    protected $message;
-    protected $userId;
+    public $message;
+    public $user;
 
-    public function __construct($message, $userId)
+    public function __construct($message, $user)
     {
         $this->message = $message;
-        $this->userId = $userId;
+        $this->user = $user;
     }
 
     public function broadcastOn()
     {
-        return new PrivateChannel('new-order.48');
+        return new PrivateChannel('new-order.' . $this->user['id']);
     }
 
     public function broadcastAs()
@@ -38,6 +38,7 @@ class SendNotificationEvent extends Event implements ShouldBroadcast, ShouldQueu
     public function broadcastWith(): array
     {
         return [
+            'user' => $this->user,
             'message' => $this->message
         ];
     }

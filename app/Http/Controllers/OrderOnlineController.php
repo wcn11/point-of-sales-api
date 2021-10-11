@@ -137,36 +137,17 @@ class OrderOnlineController extends Controller
 
     public function onlineOrder(){
 
-//        event(new SendNotificationEvent('wehehehe ashiap'));
-
-//        $options = array(
-//            'cluster' => 'mt1',
-//            'useTLS' => false
-//        );
-//        $pusher = new Pusher(
-//            '2ad75c76131decfaff1d',
-//            'a00ef1dc163cc628775e',
-//            '1266323',
-//            $options
-//        );
-//
-//        $data['message'] = 'wokwko';
-//        $pusher->trigger('new-order', 'newOrder', $data);
-//        dispatch(new SendNotificationNewOrderJob("dataaa"));
-
         $order = $this->request['order'];
 
-        $user = UserModel::all()->where('city_name', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
+        $user = UserModel::all()->where('is_active', '1', 1)->where('city_name', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
 
         if(!$user){
             $user = UserModel::all()->where("is_default", "=", 1)->first();
         }
 
-        return $this->successResponse($user);
-
         $onlineOrder = $this->order->create([
             "user_id" => $user['id'],
-            "web_order_id" => $this->request['order_id'],
+            "web_order_id" => $this->request['order_id']['id'],
             "payment" => $order['payment']['method'],
             "shipping_method" => $order['shipping_method'],
             "shipping_title" => $order['shipping_title'],
@@ -175,7 +156,6 @@ class OrderOnlineController extends Controller
             "customer_email" => $order['customer_email'],
             "company_name" => $order['shipping_address']['company_name'],
             "address1" => $order['shipping_address']['address1'],
-            "address2" => $order['shipping_address']['address2'],
             "phone" => $order['shipping_address']['phone'],
             "sub_district" => $order['shipping_address']['sub_district'],
             "district" => $order['shipping_address']['district'],
@@ -221,6 +201,8 @@ class OrderOnlineController extends Controller
         }
 
         $this->stockService->check($data, $user);
+
+        event(new SendNotificationEvent('Hai ' . $user['branch_name'] . ", ada pesanan online baru di sekitarmu." , $user));
 
         return $this->order->findOrFail($onlineOrder['id'])->update([
             "total_quantity" => $total_quantity,

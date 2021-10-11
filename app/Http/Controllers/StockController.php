@@ -30,10 +30,6 @@ class StockController extends ApiController
 
     public function index(){
 
-
-
-        event(new SendNotificationEvent('woyy', auth()->user()['id']));
-
         $products = Product::with(["product_partner" => function($query) {
             $query->where("user_id", "=", auth()->user()['id']);
         }])
