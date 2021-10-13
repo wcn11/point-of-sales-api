@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Traits\AccuratePosService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -27,22 +28,18 @@ class AuthController extends ApiController
     {
         $credentials = request(['email', 'password']);
 
+        $is_active = User::all()->where("email", "=", request('email'))->first();
+
         if (! $token = auth()->attempt($credentials)) {
 
             return $this->errorResponse('Email Atau Kata Sandi Salah', true);
 
         }
 
-//        $user = auth()->user();
-//
-//        if (!$user['id_active']){
-//
-//            return $this->errorResponse('Akun Anda Belum Aktif', true);
-//
-//        }
+        if (!$is_active['is_active']){
+            return $this->errorResponse('Akun Belum AKtif', true);
+        }
 
-//        $this->getDatabaseById(env("ACCURATE_HOST_DASAR") . "/api/open-db.do?id=" . auth()->user()['database_accurate_id']);
-//
         auth()->user()['token'] = $this->respondWithToken($token);
 
         return $this->successResponse(auth()->user());

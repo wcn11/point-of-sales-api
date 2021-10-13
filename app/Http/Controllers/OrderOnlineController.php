@@ -95,7 +95,8 @@ class OrderOnlineController extends Controller
 
         $item = [
             "customerNo" => auth()->user()['customer_no_default'],
-            "branchName" => auth()->user()['branch_name']
+            "branchName" => auth()->user()['branch_name'],
+            "description" => "POS " . strtoupper(auth()->user()['branch_name']) . " [ONLINE]"
         ];
 
         foreach ($order['order_online_item'] as $key => $cart) {

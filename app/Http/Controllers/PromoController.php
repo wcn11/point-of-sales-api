@@ -78,7 +78,7 @@ class PromoController extends ApiController
             "customerNo" => auth()->user()['customer_no_default'],
             "branchName" => auth()->user()['branch_name'],
             "transDate" => $date,
-            "description" => "POS Promo " . strtoupper(auth()->user()['branch_name'])
+            "description" => "POS" . strtoupper(auth()->user()['branch_name']) . " [PROMO]"
         ];
 
         foreach ($this->request['carts'] as $key => $cart) {
