@@ -37,7 +37,7 @@ class AuthController extends ApiController
         }
 
         if (!$is_active['is_active']){
-            return $this->errorResponse('Akun Belum AKtif', true);
+            return $this->errorResponse('Akun Mitra Belum AKtif', true);
         }
 
         auth()->user()['token'] = $this->respondWithToken($token);
