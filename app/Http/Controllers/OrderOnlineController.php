@@ -148,7 +148,7 @@ class OrderOnlineController extends Controller
 
         $onlineOrder = $this->order->create([
             "user_id" => $user['id'],
-            "web_order_id" => $this->request['order_id']['id'],
+            "web_order_id" => $this->request['order_id'],
             "payment" => $order['payment']['method'],
             "shipping_method" => $order['shipping_method'],
             "shipping_title" => $order['shipping_title'],

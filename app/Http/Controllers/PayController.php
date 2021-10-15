@@ -90,6 +90,7 @@ class PayController extends Controller
             "id" => $sales_invoice->json()['r']['id'],
             "user_id" => auth()->user()['id'],
             "accurate_invoice_id" => $sales_invoice->json()['r']['id'],
+            "accurate_invoice_no" => $sales_invoice->json()['r']['number'],
             "total" => $paymentAmount,
             "total_quantity" => $totalQuantity,
             "total_additional" => $totalAdditional,
