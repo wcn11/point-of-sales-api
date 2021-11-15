@@ -69,6 +69,8 @@ class PayController extends Controller
             $item["detailItem[{$key}].unitPrice"] = $is_admin ? $cart['basic_price'] + $cart['centralCommission'] +  + $cart['partnerCommission'] : $cart['basic_price'] + $cart['centralCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
+            $item["detailItem[{$key}].warehouseName"] =  auth()->user()['warehouse_name'];
+
             $totalAdditional += $cart['additionalPrice'];
             $paymentAmount += $cart['grand_price'] * $cart['quantity'];
             $totalQuantity += $cart['quantity'];

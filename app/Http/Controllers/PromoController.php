@@ -78,7 +78,7 @@ class PromoController extends ApiController
             "customerNo" => auth()->user()['customer_no_default'],
             "branchName" => auth()->user()['branch_name'],
             "transDate" => $date,
-            "description" => "POS" . strtoupper(auth()->user()['branch_name']) . " [PROMO]"
+            "description" => "POS " . strtoupper(auth()->user()['branch_name']) . " [PROMO]"
         ];
 
         foreach ($this->request['carts'] as $key => $cart) {
@@ -86,6 +86,8 @@ class PromoController extends ApiController
             $item["detailItem[{$key}].itemNo"] = $cart['no'];
             $item["detailItem[{$key}].unitPrice"] = $cart['basic_price'] + $cart['centralCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
+
+            $item["detailItem[{$key}].warehouseName"] =  auth()->user()['warehouse_name'];
 
         }
 

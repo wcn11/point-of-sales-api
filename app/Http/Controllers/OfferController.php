@@ -89,6 +89,7 @@ class OfferController extends ApiController
             $item["detailItem[{$key}].unitPrice"] = $cart['basic_price'] + $cart['centralCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
+            $item["detailItem[{$key}].warehouseName"] =  auth()->user()['warehouse_name'];
         }
 
         $sales_invoice = $this->sendPost( "/accurate/api/sales-invoice/save.do", $item);

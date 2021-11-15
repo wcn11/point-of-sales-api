@@ -32,7 +32,7 @@ class AuthController extends ApiController
 
         if (! $token = auth()->attempt($credentials)) {
 
-            return $this->errorResponse('Email Atau Kata Sandi Salah', true);
+            return $this->errorResponse($is_active, true);
 
         }
 
