@@ -140,7 +140,7 @@ class OrderOnlineController extends Controller
 
         $order = $this->request['order'];
 
-        $user = UserModel::all()->where('is_active', '1', 1)->where('city_name', 'like', '%' . $order['shipping_address']['city'] . '%')->first();
+        $user = UserModel::all()->where('city_name', '=', $order['shipping_address']['city'])->where('is_active', '=', 1)->first();
 
         if(!$user){
             $user = UserModel::all()->where("is_default", "=", 1)->first();
@@ -209,8 +209,7 @@ class OrderOnlineController extends Controller
             "total_quantity" => $total_quantity,
             "total_price" => $total_price,
             "total_weight" => $total_weight
-         ]);
-
+        ]);
     }
 
     private function getProductIdBySku($sku){
