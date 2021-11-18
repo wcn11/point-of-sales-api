@@ -42,8 +42,8 @@ class SalesController extends ApiController
         if ($this->request->has("to")){
 
             $sales = Sales::with("sales_item")
-                ->where('created_at','>=',Carbon::parse($this->request['from'])->startOfDay()->format("Y-m-d H:i:s"))
-                ->where('created_at','<=',Carbon::parse($this->request['to'])->endOfDay()->format("Y-m-d H:i:s"))
+                ->where('date','>=',Carbon::parse($this->request['from'])->startOfDay()->format("Y-m-d H:i:s"))
+                ->where('date','<=',Carbon::parse($this->request['to'])->endOfDay()->format("Y-m-d H:i:s"))
                 ->where("user_id", auth()->user()['id'])
                 ->get();
 

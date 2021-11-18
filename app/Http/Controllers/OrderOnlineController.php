@@ -9,6 +9,8 @@ use App\Models\OrderOnline;
 use App\Models\OrderOnlineItem;
 use App\Models\Product;
 use App\Models\ProductPartner;
+use App\Models\Sales;
+use App\Models\SalesItem;
 use App\Services\CheckInStock;
 use App\Traits\AccuratePosService;
 use App\Traits\ApiResponser;
@@ -101,9 +103,17 @@ class OrderOnlineController extends Controller
 
         foreach ($order['order_online_item'] as $key => $cart) {
 
+            $product = $this->getProductIdBySku($cart['sku']);
+
+            if(!$product){
+                return response()->json("Produk " . $cart['name'] . " Dengan SKU: " . $cart['sku'] . " Belum Ada, Namun Berhasil Melakukan Transaksi. Data Tidak Direkam Pada Laporan Penjualan");
+            }
+
             $item["detailItem[{$key}].itemNo"] = $cart['sku'];
-            $item["detailItem[{$key}].unitPrice"] = $cart['total_price'] ;
+            $item["detailItem[{$key}].unitPrice"] = $cart['price'] ;
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
+
+            $item["detailItem[{$key}].warehouseName"] =  auth()->user()['warehouse_name'];
 
             $stock = ProductPartner::where("user_id", auth()->user()['id'])->where("product_id", $cart['product_id'])->first();
 
@@ -122,17 +132,85 @@ class OrderOnlineController extends Controller
         $sales_invoice = $this->sendPost( "/accurate/api/sales-invoice/save.do", $item);
 
         if ($sales_invoice->failed()){
-            return response()->json($sales_invoice->failed());
+            return response()->json($item);
         }
 
         if (!$sales_invoice->json()['s']){
             return response()->json($sales_invoice->json()['d']);
         }
+
+        $postOrder = $this->postOrderOnlineToSales($order, $sales_invoice);
+
         $order->update([
-            "status" => "completed"
+            "status" => "completed",
+            "sales_id" => $postOrder['id']
         ]);
 
-        return $this->successResponse($order);
+        return $this->successResponse($postOrder);
+
+    }
+
+    public function postOrderOnlineToSales($order, $sales_invoice){
+
+        $totalAdditional = 0;
+        $paymentAmount = 0;
+        $totalQuantity = 0;
+        $totalCommission = 0;
+        $totalDebt = 0;
+
+        foreach ($order['order_online_item'] as $cart) {
+
+            $product = $this->getProductIdBySku($cart['sku']);
+
+            if(!$product){
+                return response()->json("Produk " . $cart['name'] . " Dengan SKU: " . $cart['sku'] . " Belum Ada, Namun Berhasil Melakukan Transaksi. Data Tidak Direkam Pada Laporan Penjualan");
+            }
+
+            $base_price = $cart['price'] - $product['centralCommission'] - $product['partnerCommission'];
+
+            $paymentAmount += $cart['price'] * $cart['quantity'];
+            $totalQuantity += $cart['quantity'];
+            $totalCommission += ($cart['price'] - $product['centralCommission'] - $base_price) * $cart['quantity'];
+            $totalDebt += ($base_price + $product['partnerCommission'])  * $cart['quantity'];
+        }
+
+        $sales = Sales::create([
+            "id" => $sales_invoice->json()['r']['id'],
+            "user_id" => auth()->user()['id'],
+            "accurate_invoice_id" => $sales_invoice->json()['r']['id'],
+            "accurate_invoice_no" => $sales_invoice->json()['r']['number'],
+            "total" => $paymentAmount,
+            "total_quantity" => $totalQuantity,
+            "total_additional" => $totalAdditional,
+            "total_commission" => $totalCommission,
+            "total_debt" => $totalDebt
+        ]);
+
+        foreach ($order['order_online_item'] as $cart) {
+
+            $product = $this->getProductIdBySku($cart['sku']);
+
+            if(!$product){
+                return response()->json("Produk " . $cart['name'] . " Dengan SKU: " . $cart['sku'] . " Belum Ada, Namun Berhasil Melakukan Transaksi. Data Tidak Direkam Pada Laporan Penjualan");
+            }
+
+            $base_price = $cart['price'] - $product['centralCommission'] - $product['partnerCommission'];
+
+            $salesItem[] = SalesItem::create([
+                "category_id" => $product['category_id'],
+                "sales_id" => $sales->id,
+                "product_accurate_no" => $cart['sku'],
+                "product_name" => $cart['name'],
+                "quantity" => $cart['quantity'],
+                "basic_price" => $base_price,
+                "centralCommission" => $cart['price'] - $product['partnerCommission'] - $base_price,
+                "partnerCommission" => $cart['price'] - $product['centralCommission'] - $base_price,
+                "grand_price" => $cart['price'] ,
+            ]);
+
+        }
+
+        return $sales;
 
     }
 
@@ -213,7 +291,6 @@ class OrderOnlineController extends Controller
     }
 
     private function getProductIdBySku($sku){
-
 
         if(!Cache::has("products")){
 
