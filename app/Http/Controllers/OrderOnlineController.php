@@ -110,7 +110,7 @@ class OrderOnlineController extends Controller
             }
 
             $item["detailItem[{$key}].itemNo"] = $cart['sku'];
-            $item["detailItem[{$key}].unitPrice"] = $cart['price'] ;
+            $item["detailItem[{$key}].unitPrice"] = $cart['price'] - $product['partnerCommission'];
             $item["detailItem[{$key}].quantity"] = $cart['quantity'];
 
             $item["detailItem[{$key}].warehouseName"] =  auth()->user()['warehouse_name'];
@@ -166,12 +166,10 @@ class OrderOnlineController extends Controller
                 return response()->json("Produk " . $cart['name'] . " Dengan SKU: " . $cart['sku'] . " Belum Ada, Namun Berhasil Melakukan Transaksi. Data Tidak Direkam Pada Laporan Penjualan");
             }
 
-            $base_price = $cart['price'] - $product['centralCommission'] - $product['partnerCommission'];
-
             $paymentAmount += $cart['price'] * $cart['quantity'];
             $totalQuantity += $cart['quantity'];
-            $totalCommission += ($cart['price'] - $product['centralCommission'] - $base_price) * $cart['quantity'];
-            $totalDebt += ($base_price + $product['partnerCommission'])  * $cart['quantity'];
+            $totalCommission += $product['partnerCommission'] * $cart['quantity'];
+            $totalDebt += ($cart['price'] - $product['partnerCommission']) * $cart['quantity'];
         }
 
         $sales = Sales::create([
