@@ -99,7 +99,7 @@ class PayController extends Controller
             "total_commission" => $totalCommission,
             "total_debt" => $totalDebt,
             "date" => $this->request['date'],
-            "time" => $this->request['time']
+            "time" => $this->request['time'],
         ]);
 
         foreach ($carts['cart_item'] as $cart) {
